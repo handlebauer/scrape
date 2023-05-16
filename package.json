@@ -1,0 +1,50 @@
+{
+  "name": "@hbauer/scrape",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "import": "./lib/index.mjs",
+    "require": "./lib/index.cjs"
+  },
+  "module": "./lib/index.mjs",
+  "main": "./lib/index.cjs",
+  "types": "types/index.d.ts",
+  "files": [
+    "lib",
+    "types"
+  ],
+  "author": "Donald Geddes",
+  "licence": "MIT",
+  "repository": "https://github.com/handlebauer/scrape.git",
+  "publishConfig": {
+    "access": "public"
+  },
+  "ava": {
+    "require": [
+      "dotenv/config"
+    ]
+  },
+  "prettier": "@hbauer/prettier-config",
+  "eslintConfig": {
+    "extends": "@hbauer/eslint-config"
+  },
+  "scripts": {
+    "build": "shx rm -rf ./lib && rollup -c",
+    "types": "shx rm -rf ./types && tsc -p jsconfig.json",
+    "prepublishOnly": "npm run types && npm run build",
+    "test": "ava"
+  },
+  "devDependencies": {
+    "@hbauer/eslint-config": "^1.7.2",
+    "@hbauer/prettier-config": "^1.1.0",
+    "@types/node": "^20.1.5",
+    "ava": "^5.2.0",
+    "dotenv": "^16.0.3",
+    "eslint": "^8.40.0",
+    "husky": "^8.0.3",
+    "prettier": "^2.8.8",
+    "rollup": "^3.21.7",
+    "shx": "^0.3.4",
+    "typescript": "^5.0.4"
+  }
+}
