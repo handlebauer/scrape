@@ -32,7 +32,8 @@
     "build": "shx rm -rf ./lib && rollup -c",
     "types": "shx rm -rf ./types && tsc -p jsconfig.json",
     "prepublishOnly": "npm run types && npm run build",
-    "test": "ava"
+    "test": "ava",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@hbauer/eslint-config": "^1.7.2",
