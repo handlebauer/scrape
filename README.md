@@ -54,7 +54,7 @@ import { Scrape } from '@hbauer/scrape'
 
 const baseURL = 'https://httpbin.org'
 
-// Pass
+// Sample cache options
 const cacheOptions = {
   disable: false, // by default, the cache is disabled
   rootDirectory: '__cache' // files will be written to PROJECT_ROOT/${rootDirectory} (you may wish to .gitignore this)
@@ -66,6 +66,6 @@ const httpbin = Scrape.init(baseURL, { contentType: 'html', cache: cacheOptions 
 
 const html = await httpbin.scrape('html') // alias for https://httpbin.org/html
 
-// Get the local path to a cached file:
 const pathToCachedFile = httpbin.getLocalPath('html') // = '__cache/httpbin/html'
+const htmlFromFile = await readFile(pathToCachedFile, 'utf8') // = '<!DOCTYPE html>...'
 ```
