@@ -115,6 +115,21 @@ export class Scrape extends ScrapeBase {
   /**
    * @public
    * @param {string} href
+   */
+  getLocalFile(href) {
+    href = reconcileHref(this.baseURL, href)
+    if (href === null) {
+      throw new Error(
+        `Scrape error: provided value for \`href\` (${href}) cannot be reconciled with the \`baseURL\` (${this.baseURL}) — if this is intentional, use the \`allowDistinctHref\` option`
+      )
+    }
+
+    return this.cache.get(href)
+  }
+
+  /**
+   * @public
+   * @param {string} href
    * @param {ScrapeMethodOptions} [options]
    * @param {ScrapeRetryInfo} [retry]
    * @returns {Promise<any>}

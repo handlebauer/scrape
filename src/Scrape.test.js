@@ -64,7 +64,7 @@ test('Should successfully return HTML from an HTML body', async t => {
   t.true(html.startsWith('<!DOCTYPE html>'))
 })
 
-test.only('Should successfully save HTML with an .html extension if configured', async t => {
+test('Should successfully save HTML with an .html extension if configured', async t => {
   const scraper = Scrape.init(baseURL, {
     contentType: 'html',
     cache: { name: 'scraper', fileExtension: 'html' },
@@ -77,6 +77,28 @@ test.only('Should successfully save HTML with an .html extension if configured',
 
   t.true(await pathExists(targetPath))
   t.is(derivedPath, targetPath)
+})
+
+test('Should return a local life if it exists upon invoking getLocalFile', async t => {
+  const scraper = Scrape.init(baseURL, {
+    contentType: 'html',
+    cache: { name: 'scraper' },
+  })
+
+  await scraper.scrape('html')
+
+  const file = await scraper.getLocalFile('html')
+
+  t.is(typeof file, 'string')
+  t.true(file.startsWith('<!DOCTYPE html>'))
+})
+
+test.only("Should return null upon invoking getLocalFile if the file doesn't exist", async t => {
+  const scraper = Scrape.init(baseURL)
+
+  const file = await scraper.getLocalFile('random/path')
+
+  t.is(file, null)
 })
 
 test('Should create a local directory given a provided cache name', async t => {
