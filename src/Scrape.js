@@ -129,6 +129,15 @@ export class Scrape extends ScrapeBase {
 
   /**
    * @public
+   * @param {string} path
+   * @param {any} data
+   */
+  addLocalFile(path, data) {
+    return this.cache.set(path, data)
+  }
+
+  /**
+   * @public
    * @param {string} href
    * @param {ScrapeMethodOptions} [options]
    * @param {ScrapeRetryInfo} [retry]

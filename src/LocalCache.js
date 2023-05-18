@@ -110,7 +110,7 @@ export class LocalCache {
   /**
    * @public
    * @param {string} href
-   * @param {string} data
+   * @param {any} data
    */
   set(href, data) {
     const encoded = this.encode(data)
