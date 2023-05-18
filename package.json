@@ -47,5 +47,11 @@
     "rollup": "^3.21.7",
     "shx": "^0.3.4",
     "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@hbauer/timer": "^0.2.0",
+    "p-retry": "^5.1.2",
+    "p-throttle": "^5.1.0",
+    "remeda": "^1.14.0"
   }
 }
