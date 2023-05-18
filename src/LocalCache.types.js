@@ -1,7 +1,7 @@
 /**
  * @typedef {{
- * contentType?: 'json' | 'html'
  * rootDirectory?: string
+ * name?: string
  * resourceExtension?: string
  * }} LocalCacheOptions
  */

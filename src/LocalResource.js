@@ -11,13 +11,20 @@ export class LocalResource {
    * @param {string} baseURL
    * @param {LocalResourceOptions} [opts]
    */
-  constructor(baseURL, { rootDirectory, resourceExtension } = {}) {
+  constructor(baseURL, { rootDirectory, name, resourceExtension } = {}) {
     /**
      * @private
      * @readonly
-     * @description `baseURL` is e.g. 'http://api.exapmle.com'
+     * @description `baseURL` is e.g. 'https://httpbin.org'
      */
     this.baseURL = removeSlashes(baseURL)
+
+    /**
+     * @private
+     * @readonly
+     * @description `name` is e.g. 'httpbin'
+     */
+    this.name = removeSlashes(name)
 
     /**
      * @private
@@ -49,8 +56,7 @@ export class LocalResource {
     href = removeSlashes(href)
 
     /**
-     * @description
-     * `href` is e.g. 'http://exapmle.com/path/to/resource'
+     * `href` is e.g. 'https://httpbin.org/path/to/resource'
      * `path` aims to remove `baseURL` from `href`, e.g. '/path/to/resource'
      */
     let path = href.startsWith(this.baseURL)
@@ -58,20 +64,36 @@ export class LocalResource {
       : href
 
     /**
-     * @private
-     * @description
-     * `path` === 'path/to'
-     * `directory` === '__cache/path/to'
-     * `resource` === 'resource'
+     * `file` === 'path/to'
      */
     let file = path.split('/').slice(1, -1).join('/')
-    const directory = this.rootDirectory + '/' + file
+
+    /**
+     * `directory` === '__cache'
+     */
+    let directory = this.rootDirectory
+
+    if (this.name) {
+      /**
+       * `directory` === '__cache/httpbin'
+       */
+      directory += '/' + this.name
+    }
+
+    /**
+     * `directory` === '__cache/path/to' or '__cache/httpbin/path/to
+     */
+    directory += '/' + file
+
+    /**
+     * `resource` === 'resource'
+     */
     const resource = path.split('/').slice(-1).join()
 
     file = directory + '/' + resource
 
     if (this.resourceExtension !== undefined) {
-      file += `.${this.resourceExtension}`
+      file += '.' + this.resourceExtension
     }
 
     return { directory, file }

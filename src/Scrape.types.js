@@ -9,6 +9,7 @@
  *
  * @typedef {{
  * rootDirectory?: string
+ * name?: string
  * fileExtension?: string,
  * disable?: boolean
  * }} ScrapeCacheOptions

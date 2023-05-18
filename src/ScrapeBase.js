@@ -72,6 +72,7 @@ export class ScrapeBase {
     } else {
       const cacheOptions = {
         rootDirectory: cache.rootDirectory,
+        name: cache.name,
         fileExtension: cache.fileExtension,
       }
 

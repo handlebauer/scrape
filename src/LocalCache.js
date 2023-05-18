@@ -14,9 +14,9 @@ export class LocalCache {
   constructor(
     baseURL,
     contentType = 'json',
-    { rootDirectory = '__cache', resourceExtension } = {}
+    { rootDirectory = '__cache', name, resourceExtension } = {}
   ) {
-    const localResourceOptions = { rootDirectory, resourceExtension }
+    const localResourceOptions = { rootDirectory, name, resourceExtension }
     this.localResource = new LocalResource(baseURL, localResourceOptions)
 
     /**

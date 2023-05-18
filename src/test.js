@@ -1,4 +1,5 @@
 import test from 'ava'
+import { access } from 'fs/promises'
 import { Scrape } from './Scrape.js'
 
 const baseURL = '////https://httpbin.org////'
@@ -55,6 +56,20 @@ test('Should successfully return HTML from an HTML body', async t => {
 
   t.is(typeof html, 'string')
   t.true(html.startsWith('<!DOCTYPE html>'))
+})
+
+test.only('Should create a local directory given a provided cache name', async t => {
+  const scraper = Scrape.init(baseURL, { cache: { name: 'httpbin' } })
+
+  /** @param {string} path */
+  const dirExists = path =>
+    access(path)
+      .then(() => true)
+      .catch(() => false)
+
+  await scraper.scrape('json')
+
+  t.true(await dirExists('__cache/httpbin'))
 })
 
 test('Should adapt to both relative and absolute hrefs', async t => {
