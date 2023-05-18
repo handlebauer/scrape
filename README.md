@@ -41,7 +41,7 @@ const resource = await httpbin.scrape('uuid') // = { "uuid": "6bb2..." }
 const absolute = await httpbin.scrape('https://httpbin.org/uuid')
 
 // Get the local path to a cached file:
-const { path } = httpbin.getLocalPath('uuid') // = '__cache/uuid'
+const path = httpbin.getLocalPath('uuid') // = '__cache/uuid'
 
 // Note: a file may or may not already exist at the returned path:
 await readFile(path, 'utf8') // = returns an error if the resource has not yet been scraped
@@ -73,6 +73,6 @@ const httpbin = Scrape.init(baseURL, { contentType: 'html', cache: cacheOptions 
 
 const html = await httpbin.scrape('html') // alias for https://httpbin.org/html
 
-const { path } = httpbin.getLocalPath('html') // = '__cache/httpbin/html'
+const path = httpbin.getLocalPath('html') // = '__cache/httpbin/html'
 const htmlFromFile = await readFile(path, 'utf8') // = '<!DOCTYPE html>...'
 ```
