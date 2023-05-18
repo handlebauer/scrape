@@ -54,12 +54,19 @@ import { Scrape } from '@hbauer/scrape'
 
 const baseURL = 'https://httpbin.org'
 
-// Sample cache options
+/**
+ * Cache Options
+ *
+ * disable - the cache can be disabled (enabled by default)
+ * rootDirectory - PROJECT_ROOT/${rootDirectory} (PROJECT_ROOT/__cache by default)
+ * name - alternatively, PROJECT_ROOT/${rootDirectory}/${name} (no name by default)
+ * fileExtension - PROJECT_ROOT/${rootDirectory}/${name}/path/file.json (no ext by default)
+ */
 const cacheOptions = {
-  disable: false, // by default, the cache is disabled
-  rootDirectory: '__cache' // files will be written to PROJECT_ROOT/${rootDirectory} (you may wish to .gitignore this)
-  name: 'httpbin' // alternatively, files can be written to PROJECT_ROOT/${rootDirectory}/${name}/
-  fileExtension: 'html' // a file extension can also be appended, PROJECT_ROOT/${rootDirectory}/${name}/path/file.json
+  disable: false,
+  rootDirectory: '__cache'
+  name: 'httpbin'
+  fileExtension: 'html'
 }
 
 const httpbin = Scrape.init(baseURL, { contentType: 'html', cache: cacheOptions })
