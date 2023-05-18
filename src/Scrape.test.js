@@ -79,7 +79,7 @@ test('Should successfully save HTML with an .html extension if configured', asyn
   t.is(derivedPath, targetPath)
 })
 
-test('Should return a local life if it exists upon invoking getLocalFile', async t => {
+test('Should return a local file if it exists upon invoking getLocalFile', async t => {
   const scraper = Scrape.init(baseURL, {
     contentType: 'html',
     cache: { name: 'scraper' },
@@ -93,12 +93,35 @@ test('Should return a local life if it exists upon invoking getLocalFile', async
   t.true(file.startsWith('<!DOCTYPE html>'))
 })
 
-test.only("Should return null upon invoking getLocalFile if the file doesn't exist", async t => {
+test("Should return null upon invoking getLocalFile if the file doesn't exist", async t => {
   const scraper = Scrape.init(baseURL)
 
   const file = await scraper.getLocalFile('random/path')
 
   t.is(file, null)
+})
+
+test('Should return a local path if it exists upon invoking getLocalPath', async t => {
+  const scraper = Scrape.init(baseURL, {
+    contentType: 'html',
+    cache: { name: 'scraper' },
+  })
+
+  await scraper.scrape('html')
+
+  const path = scraper.getLocalPath('html')
+
+  const targetPath = '__cache/scraper/html'
+
+  t.is(path, targetPath)
+})
+
+test("Should return null upon invoking getLocalPath if the file doesn't exist", t => {
+  const scraper = Scrape.init(baseURL)
+
+  const path = scraper.getLocalPath('random/path')
+
+  t.is(path, null)
 })
 
 test('Should create a local directory given a provided cache name', async t => {
@@ -151,7 +174,7 @@ test('Should allow for one-off requests using the allowDistinctHref option', asy
     allowDistinctHref: true,
   })
 
-  t.is(await pathExists('__cache/httpbin/httpbin.org/json'), true)
+  t.is(await pathExists('__cache/httpbin/http://httpbin.org/json'), true)
   t.is(typeof data, 'object')
   t.is(data.slideshow.title, 'Sample Slide Show')
 })

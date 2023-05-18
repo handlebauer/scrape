@@ -83,7 +83,7 @@ export class Scrape extends ScrapeBase {
      * @param {Error} error
      */
     return error => {
-      if (this.handleFailedRequest !== undefined) {
+      if (this[handleFailedRequest] !== undefined) {
         this[handleFailedRequest](error, retry)
       }
 

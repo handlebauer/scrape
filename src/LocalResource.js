@@ -1,3 +1,4 @@
+import { accessSync } from 'fs'
 import { readFile, writeFile, mkdir } from 'fs/promises'
 import { last, pipe } from 'remeda'
 import { removeSlashes } from './utils/remove-slash.js'
@@ -48,11 +49,27 @@ export class LocalResource {
    */
 
   /**
+   * Returns true or false depending on if `path` exsists on the local filesystem
+   *
+   * @param {string} path
+   */
+  pathExists(path) {
+    try {
+      accessSync(path)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * Derives paths for the provided `href` without touching the local filesystem
+   *
    * @public
    * @param {string} href
    * @returns {{ directory: string, filename: string, path: string }}
    */
-  getPaths(href) {
+  derivePaths(href) {
     let intermediatePath = removeSlashes(href)
 
     /**
@@ -104,12 +121,29 @@ export class LocalResource {
   }
 
   /**
+   * Returns paths if and only if the path exists on the local filesystem
+   *
+   * @public
+   * @param {string} href
+   */
+  getPaths(href) {
+    const paths = this.derivePaths(href)
+    const exists = this.pathExists(paths.path)
+
+    if (exists === true) {
+      return paths
+    }
+
+    return { directory: null, filename: null, path: null }
+  }
+
+  /**
    * @public
    * @param {string} href
    * @param {string} data
    */
   async write(href, data) {
-    const { directory, filename, path } = this.getPaths(href)
+    const { directory, filename, path } = this.derivePaths(href)
 
     if (typeof data !== 'string') {
       let message = `LocalResource error: Unable to write ${filename}: value must be of type 'string' but is instead '${typeof data}'`
@@ -130,16 +164,16 @@ export class LocalResource {
    * @param {string} href
    */
   async read(href) {
-    const { path } = this.getPaths(href)
+    const { path } = this.derivePaths(href)
 
     try {
       const data = await readFile(path, 'utf-8')
       return data
     } catch (error) {
+      /**
+       * 'ENOENT', the resource does not yet exist
+       */
       if (error.code === 'ENOENT') {
-        /**
-         * 'ENOENT', the resource does not yet exist
-         */
         return null
       }
       throw new Error(error)
