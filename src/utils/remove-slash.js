@@ -5,16 +5,22 @@ import { pipe } from 'remeda'
  * @returns {string}
  */
 const removeTrailingSlash = string =>
-  string.endsWith('/') === true
-    ? removeTrailingSlash(string.slice(0, -1))
-    : string
+  string
+    ? string.endsWith('/') === true
+      ? removeTrailingSlash(string.slice(0, -1))
+      : string
+    : undefined
 
 /**
  * @param {string} string
  * @returns {string}
  */
 const removeLeadingSlash = string =>
-  string.startsWith('/') === true ? removeLeadingSlash(string.slice(1)) : string
+  string
+    ? string.startsWith('/') === true
+      ? removeLeadingSlash(string.slice(1))
+      : string
+    : undefined
 
 /**
  * @param {string} string

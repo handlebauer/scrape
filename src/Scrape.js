@@ -11,6 +11,7 @@ import { reconcileHref } from './utils/reconcile-href.js'
  * @typedef {import('./Scrape.types.js').ScrapeRetryOptions} ScrapeRetryOptions
  * @typedef {import('./Scrape.types.js').ScrapeRetryInfo} ScrapeRetryInfo
  * @typedef {import('./Scrape.types.js').ScrapeInFlightRequest} ScrapeInFlightRequest
+ * @typedef {import('./Scrape.types.js').ScrapeMethodOptions} ScrapeMethodOptions
  */
 
 export class Scrape extends ScrapeBase {
@@ -109,22 +110,44 @@ export class Scrape extends ScrapeBase {
   /**
    * @public
    * @param {string} href
-   * @param {RequestInit & { invalidate?: boolean }} [options]
+   * @param {ScrapeMethodOptions} [options]
    * @param {ScrapeRetryInfo} [retry]
    * @returns {Promise<any>}
    */
   async scrape(
     href,
-    options = { invalidate: undefined },
+    options = { invalidate: undefined, allowDistinctHref: false },
     retry = { attempts: 0, error: null }
   ) {
-    href = reconcileHref(this.baseURL, href)
+    const { invalidate, allowDistinctHref, ...init } = options
+
+    /**
+     * Either an absolute href or else null
+     */
+    let reconciledHref = reconcileHref(this.baseURL, href)
+
+    if (reconciledHref === null) {
+      if (allowDistinctHref === false) {
+        throw new Error(
+          `Scrape error: provided value for \`href\` (${href}) cannot be reconciled with the \`baseURL\` (${this.baseURL}) — if this is intentional, use the \`allowDistinctHref\` option`
+        )
+      }
+      /**
+       * Unable to reconcile href, so reconciledHref is null, but this
+       * is allowed because allowDistinctHref is set to true , so use
+       * the original value of href
+       */
+      reconciledHref = href
+    }
+
+    /**
+     * The rest of the method uses href, re-assign
+     */
+    href = reconciledHref
 
     if (retry.attempts > this.retryOptions.attempts) {
       throw retry.error
     }
-
-    const { invalidate, ...init } = options
 
     href = await this[preFlight](href)
 

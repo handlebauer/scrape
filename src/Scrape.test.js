@@ -2,6 +2,12 @@ import test from 'ava'
 import { access } from 'fs/promises'
 import { Scrape } from './Scrape.js'
 
+/** @param {string} path */
+const pathExists = path =>
+  access(path)
+    .then(() => true)
+    .catch(() => false)
+
 const baseURL = '////https://httpbin.org////'
 
 test('Should return valid instance with sensible defaults', t => {
@@ -58,18 +64,12 @@ test('Should successfully return HTML from an HTML body', async t => {
   t.true(html.startsWith('<!DOCTYPE html>'))
 })
 
-test.only('Should create a local directory given a provided cache name', async t => {
+test('Should create a local directory given a provided cache name', async t => {
   const scraper = Scrape.init(baseURL, { cache: { name: 'httpbin' } })
-
-  /** @param {string} path */
-  const dirExists = path =>
-    access(path)
-      .then(() => true)
-      .catch(() => false)
 
   await scraper.scrape('json')
 
-  t.true(await dirExists('__cache/httpbin'))
+  t.true(await pathExists('__cache/httpbin'))
 })
 
 test('Should adapt to both relative and absolute hrefs', async t => {
@@ -95,4 +95,26 @@ test('Should return raw response when `returnRawFetchResponse` is `true`', async
 
   t.true(rawFetchResponse instanceof Response)
   t.is(typeof rawFetchResponse.json, 'function')
+})
+
+test.only('Should return an error when attempting to use a href with a different baseURL', async t => {
+  const scraper = Scrape.init(baseURL, { cache: { name: 'httpbin' } })
+
+  const httpInsteadOfHttps = 'http://httpbin.org/json'
+
+  await t.throwsAsync(() => scraper.scrape(httpInsteadOfHttps))
+})
+
+test('Should allow for one-off requests using the allowDistinctHref option', async t => {
+  const scraper = Scrape.init(baseURL, { cache: { name: 'httpbin' } })
+
+  const httpInsteadOfHttps = 'http://httpbin.org/json'
+
+  const data = await scraper.scrape(httpInsteadOfHttps, {
+    allowDistinctHref: true,
+  })
+
+  t.is(await pathExists('__cache/httpbin/httpbin.org/json'), true)
+  t.is(typeof data, 'object')
+  t.is(data.slideshow.title, 'Sample Slide Show')
 })

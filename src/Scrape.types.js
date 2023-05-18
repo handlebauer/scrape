@@ -41,6 +41,8 @@
  * error: Error
  * }} ScrapeRetryInfo
  *
+ * @typedef {RequestInit & { invalidate?: boolean, allowDistinctHref?: boolean }} ScrapeMethodOptions
+ *
  */
 
 export {}

@@ -6,5 +6,15 @@ import { removeSlashes } from './remove-slash.js'
  */
 export const reconcileHref = (baseURL, href) => {
   href = removeSlashes(href)
-  return href.startsWith(baseURL) ? href : baseURL + '/' + href
+
+  const isAbsolute = href.startsWith('http') === true
+
+  if (isAbsolute) {
+    if (href.startsWith(baseURL) === true) {
+      return href
+    }
+    return null
+  }
+
+  return baseURL + '/' + href
 }
