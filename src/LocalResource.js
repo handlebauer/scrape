@@ -2,6 +2,10 @@ import { readFile, writeFile, mkdir } from 'fs/promises'
 import { pipe } from 'remeda'
 import { removeSlashes } from './utils/remove-slash.js'
 
+/**
+ * @typedef {import('./LocalResource.types.js').LocalResourceOptions} LocalResourceOptions
+ */
+
 export class LocalResource {
   /**
    * @param {string} baseURL

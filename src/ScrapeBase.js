@@ -2,6 +2,17 @@ import pThrottle from 'p-throttle'
 import { LocalCache } from './LocalCache.js'
 import { removeSlashes } from './utils/remove-slash.js'
 
+/**
+ * @typedef {import('./types.js').ThrottleOptions} ThrottleOptions
+ *
+ * @typedef {import('./Scrape.types.js').ScrapeOptions} ScrapeOptions
+ *
+ * @typedef {import('./Scrape.types.js').AddHandlerParameters} AddHandlerParameters
+ * @typedef {import('./Scrape.types.js').ScrapeHandleRequestFunction} ScrapeHandleRequestFunction
+ * @typedef {import('./Scrape.types.js').ScrapeHandleResponseFunction} ScrapeHandleResponseFunction
+ * @typedef {import('./Scrape.types.js').ScrapeHandleFailedRequestFunction} ScrapeHandleFailedRequestFunction
+ */
+
 export const scrapeCache = Symbol('cache')
 export const preFlight = Symbol('preFlight')
 export const postFlight = Symbol('postFlight')

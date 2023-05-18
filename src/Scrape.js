@@ -6,6 +6,13 @@ import { postFlight } from './ScrapeBase.js'
 import { scrapeFetch } from './ScrapeBase.js'
 import { reconcileHref } from './utils/reconcile-href.js'
 
+/**
+ * @typedef {import('./Scrape.types.js').ScrapeOptions} ScrapeOptions
+ * @typedef {import('./Scrape.types.js').ScrapeRetryOptions} ScrapeRetryOptions
+ * @typedef {import('./Scrape.types.js').ScrapeRetryInfo} ScrapeRetryInfo
+ * @typedef {import('./Scrape.types.js').ScrapeInFlightRequest} ScrapeInFlightRequest
+ */
+
 export class Scrape extends ScrapeBase {
   /**
    * @param {string} baseURL

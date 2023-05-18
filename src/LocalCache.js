@@ -1,5 +1,10 @@
 import { LocalResource } from './LocalResource.js'
 
+/**
+ * @typedef {import('./types.js').ResourceContentType} ResourceContentType
+ * @typedef {import('./LocalCache.types.js').LocalCacheOptions} LocalCacheOptions
+ */
+
 export class LocalCache {
   /**
    * @param {string} baseURL
