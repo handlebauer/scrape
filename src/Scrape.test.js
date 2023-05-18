@@ -64,6 +64,21 @@ test('Should successfully return HTML from an HTML body', async t => {
   t.true(html.startsWith('<!DOCTYPE html>'))
 })
 
+test.only('Should successfully save HTML with an .html extension if configured', async t => {
+  const scraper = Scrape.init(baseURL, {
+    contentType: 'html',
+    cache: { name: 'scraper', fileExtension: 'html' },
+  })
+
+  await scraper.scrape('html')
+
+  const targetPath = '__cache/scraper/html.html'
+  const derivedPath = scraper.getLocalPath('html')
+
+  t.true(await pathExists(targetPath))
+  t.is(derivedPath, targetPath)
+})
+
 test('Should create a local directory given a provided cache name', async t => {
   const scraper = Scrape.init(baseURL, { cache: { name: 'httpbin' } })
 
@@ -97,7 +112,7 @@ test('Should return raw response when `returnRawFetchResponse` is `true`', async
   t.is(typeof rawFetchResponse.json, 'function')
 })
 
-test.only('Should return an error when attempting to use a href with a different baseURL', async t => {
+test('Should return an error when attempting to use a href with a different baseURL', async t => {
   const scraper = Scrape.init(baseURL, { cache: { name: 'httpbin' } })
 
   const httpInsteadOfHttps = 'http://httpbin.org/json'

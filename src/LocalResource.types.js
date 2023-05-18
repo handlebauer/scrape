@@ -2,7 +2,7 @@
  * @typedef {{
  * rootDirectory?: string
  * name?: string
- * resourceExtension?: string
+ * extension?: string
  * }} LocalResourceOptions
  */
 

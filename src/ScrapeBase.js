@@ -6,6 +6,7 @@ import { removeSlashes } from './utils/remove-slash.js'
  * @typedef {import('./types.js').ThrottleOptions} ThrottleOptions
  *
  * @typedef {import('./Scrape.types.js').ScrapeOptions} ScrapeOptions
+ * @typedef {import('./LocalCache.types.js').LocalCacheOptions} LocalCacheOptions
  *
  * @typedef {import('./Scrape.types.js').AddHandlerParameters} AddHandlerParameters
  * @typedef {import('./Scrape.types.js').ScrapeHandleRequestFunction} ScrapeHandleRequestFunction
@@ -13,13 +14,7 @@ import { removeSlashes } from './utils/remove-slash.js'
  * @typedef {import('./Scrape.types.js').ScrapeHandleFailedRequestFunction} ScrapeHandleFailedRequestFunction
  */
 
-export const scrapeCache = Symbol('cache')
-export const preFlight = Symbol('preFlight')
-export const postFlight = Symbol('postFlight')
-export const handleRequest = Symbol('handleRequest')
-export const handleResponse = Symbol('handleResponse')
 export const handleFailedRequest = Symbol('handleFailedRequest')
-export const scrapeFetch = Symbol('scrapeFetch')
 
 export class ScrapeBase {
   /**
@@ -68,8 +63,11 @@ export class ScrapeBase {
       /**
        * @public
        */
-      this[scrapeCache] = null
+      this.cache = null
     } else {
+      /**
+       * @type {LocalCacheOptions}
+       */
       const cacheOptions = {
         rootDirectory: cache.rootDirectory,
         name: cache.name,
@@ -79,20 +77,20 @@ export class ScrapeBase {
       /**
        * @public
        */
-      this[scrapeCache] = new LocalCache(baseURL, contentType, cacheOptions)
+      this.cache = new LocalCache(baseURL, contentType, cacheOptions)
     }
 
     /**
      * @private
      * @type {ScrapeHandleRequestFunction}
      */
-    this[handleRequest] = undefined
+    this.handleRequest = undefined
 
     /**
      * @private
      * @type {ScrapeHandleResponseFunction}
      */
-    this[handleResponse] = undefined
+    this.handleResponse = undefined
 
     /**
      * @private
@@ -103,7 +101,7 @@ export class ScrapeBase {
     /**
      * @public
      */
-    this[scrapeFetch] = this.createFetch()
+    this.fetch = this.createFetch()
 
     this.install()
   }
@@ -157,7 +155,7 @@ export class ScrapeBase {
    */
   set throttleLimit(limit) {
     this.throttleOptions = { ...this.throttleOptions, limit }
-    this[scrapeFetch] = this.createFetch()
+    this.Fetch = this.createFetch()
   }
 
   /**
@@ -166,7 +164,7 @@ export class ScrapeBase {
    */
   set throttleInterval(interval) {
     this.throttleOptions = { ...this.throttleOptions, interval }
-    this[scrapeFetch] = this.createFetch()
+    this.Fetch = this.createFetch()
   }
 
   /**
@@ -182,10 +180,10 @@ export class ScrapeBase {
     /**
      * @param {string} href
      */
-    this[preFlight] = async href => {
-      if (this[handleRequest]) {
+    this.preFlight = async href => {
+      if (this.handleRequest) {
         const url = new URL(href)
-        const handledUrl = await this[handleRequest](url)
+        const handledUrl = await this.handleRequest(url)
         return handledUrl.toString()
       }
       return href
@@ -194,22 +192,22 @@ export class ScrapeBase {
     /**
      * @param {Response} response
      */
-    this[postFlight] = async response => {
+    this.postFlight = async response => {
       if (response.ok === false) {
         throw new Error(
           `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`
         )
       }
 
-      if (this[scrapeCache]) {
+      if (this.cache) {
         const { url: href } = response
         const data = await response.clone()[this.responseBodyType]()
-        await this[scrapeCache].set(href, data)
+        await this.cache.set(href, data)
       }
 
       let handledResponse = response
 
-      if (this[handleResponse]) {
+      if (this.handleResponse) {
         /**
          * handledResponse is assigned either the result of the
          * end-user's handleResponse function or else defaults to the
@@ -218,7 +216,7 @@ export class ScrapeBase {
          * at the end of their handler
          */
         handledResponse =
-          (await this[handleResponse](response)) ?? handledResponse
+          (await this.handleResponse(response)) ?? handledResponse
       }
 
       if (
@@ -267,11 +265,11 @@ export class ScrapeBase {
     }
 
     if (request !== undefined) {
-      this[handleRequest] = request
+      this.handleRequest = request
     }
 
     if (response !== undefined) {
-      this[handleResponse] = response
+      this.handleResponse = response
     }
 
     if (failedRequest !== undefined) {

@@ -3,20 +3,29 @@ import { LocalResource } from './LocalResource.js'
 /**
  * @typedef {import('./types.js').ResourceContentType} ResourceContentType
  * @typedef {import('./LocalCache.types.js').LocalCacheOptions} LocalCacheOptions
+ *
+ * @typedef {import('./LocalResource.types.js').LocalResourceOptions} LocalResourceOptions
  */
 
 export class LocalCache {
   /**
    * @param {string} baseURL
    * @param {ResourceContentType} contentType
-   * @param {LocalCacheOptions} [opts]
+   * @param {LocalCacheOptions} options
    */
   constructor(
     baseURL,
     contentType = 'json',
-    { rootDirectory = '__cache', name, resourceExtension } = {}
+    { rootDirectory = '__cache', name, fileExtension } = {}
   ) {
-    const localResourceOptions = { rootDirectory, name, resourceExtension }
+    /**
+     * @type {LocalResourceOptions}
+     */
+    const localResourceOptions = {
+      rootDirectory,
+      name,
+      extension: fileExtension,
+    }
     this.localResource = new LocalResource(baseURL, localResourceOptions)
 
     /**
@@ -27,25 +36,24 @@ export class LocalCache {
     /**
      * @private
      */
-    this.encode = this.encoder
+    this.encode = this.getEncoder()
 
     /**
      * @private
      */
-    this.decode = this.decoder
+    this.decode = this.getDecoder()
   }
 
   /**
    *
-   * PRIVATE GETTERS
+   * PRIVATE METHODS
    *
    */
 
   /**
    * @private
-   * @readonly
    */
-  get encoder() {
+  getEncoder() {
     if (this.contentType === 'json') {
       return JSON.stringify
     }
@@ -64,9 +72,8 @@ export class LocalCache {
 
   /**
    * @private
-   * @readonly
    */
-  get decoder() {
+  getDecoder() {
     if (this.contentType === 'json') {
       return JSON.parse
     }

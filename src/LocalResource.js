@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir } from 'fs/promises'
-import { pipe } from 'remeda'
+import { last, pipe } from 'remeda'
 import { removeSlashes } from './utils/remove-slash.js'
 
 /**
@@ -9,9 +9,9 @@ import { removeSlashes } from './utils/remove-slash.js'
 export class LocalResource {
   /**
    * @param {string} baseURL
-   * @param {LocalResourceOptions} [opts]
+   * @param {LocalResourceOptions} options
    */
-  constructor(baseURL, { rootDirectory, name, resourceExtension } = {}) {
+  constructor(baseURL, { rootDirectory, name, extension } = {}) {
     /**
      * @private
      * @readonly
@@ -36,9 +36,9 @@ export class LocalResource {
     /**
      * @private
      * @readonly
-     * @description `resourceExtension` is e.g. 'json'
+     * @description `extension` is e.g. 'json'
      */
-    this.resourceExtension = resourceExtension
+    this.extension = extension
   }
 
   /**
@@ -50,53 +50,57 @@ export class LocalResource {
   /**
    * @public
    * @param {string} href
-   * @returns {{directory: string, file: string }} e.g. '__cache/path/to/resource.json`
+   * @returns {{ directory: string, filename: string, path: string }}
    */
   getPaths(href) {
-    href = removeSlashes(href)
+    let intermediatePath = removeSlashes(href)
 
     /**
-     * `href` is e.g. 'https://httpbin.org/path/to/resource'
-     * `path` aims to remove `baseURL` from `href`, e.g. '/path/to/resource'
+     * If href is 'https://httpbin.org/path/to/page', then intermediatePath is 'path/to/page'
      */
-    let path = href.startsWith(this.baseURL)
-      ? pipe(href.split(this.baseURL).at(1), removeSlashes)
+    intermediatePath = href.startsWith(this.baseURL)
+      ? pipe(href.split(this.baseURL), last(), removeSlashes)
       : href
 
     /**
-     * `file` === 'path/to'
+     * If intermediatePath was 'path/to/page', now it's 'path/to/page.ext'
      */
-    let file = path.split('/').slice(1, -1).join('/')
+    if (!!this.extension === true) {
+      intermediatePath += '.' + this.extension
+    }
 
-    /**
-     * `directory` === '__cache'
-     */
     let directory = this.rootDirectory
 
-    if (this.name) {
-      /**
-       * `directory` === '__cache/httpbin'
-       */
+    /**
+     * If directory was '__cache', now it's '__cache/cache-name'
+     */
+    if (!!this.name === true) {
       directory += '/' + this.name
     }
 
     /**
-     * `directory` === '__cache/path/to' or '__cache/httpbin/path/to
+     * If intermediatePath is 'path/to/page', then pathParts is ['path', 'to', 'page']
      */
-    directory += '/' + file
+    const pathParts = intermediatePath.split('/')
 
     /**
-     * `resource` === 'resource'
+     * If pathParts is ['path', 'to', page'], then dirctory is '__cache/path/to'
      */
-    const resource = path.split('/').slice(-1).join()
-
-    file = directory + '/' + resource
-
-    if (this.resourceExtension !== undefined) {
-      file += '.' + this.resourceExtension
+    if (pathParts.length > 1) {
+      directory += '/' + pathParts.slice(0, -1).join('/')
     }
 
-    return { directory, file }
+    /**
+     * If intermediatePath is 'path/to/page', then filename is 'page'
+     */
+    const filename = intermediatePath.split('/').at(-1)
+
+    /**
+     * If drectory is '__cache/path/to' and filename is 'page', then path is '__cache/path/to/page'
+     */
+    const path = directory + '/' + filename
+
+    return { directory, filename, path }
   }
 
   /**
@@ -105,19 +109,16 @@ export class LocalResource {
    * @param {string} data
    */
   async write(href, data) {
-    /**
-     * NOTE: `getFullPath` has side-effects (assigns values to `resourceDirectory`, and `resource`)
-     */
-    const { directory, file } = this.getPaths(href)
+    const { directory, filename, path } = this.getPaths(href)
 
     if (typeof data !== 'string') {
-      let message = `LocalResource error: Unable to write ${file}: value must be of type 'string' but is instead '${typeof data}'`
+      let message = `LocalResource error: Unable to write ${filename}: value must be of type 'string' but is instead '${typeof data}'`
       throw new TypeError(message)
     }
 
     try {
       await mkdir(directory, { recursive: true })
-      await writeFile(file, data)
+      await writeFile(path, data)
       return true
     } catch (error) {
       throw new Error(error)
@@ -129,10 +130,10 @@ export class LocalResource {
    * @param {string} href
    */
   async read(href) {
-    const { file } = this.getPaths(href)
+    const { path } = this.getPaths(href)
 
     try {
-      const data = await readFile(file, 'utf-8')
+      const data = await readFile(path, 'utf-8')
       return data
     } catch (error) {
       if (error.code === 'ENOENT') {

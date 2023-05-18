@@ -1,9 +1,5 @@
-import { ScrapeBase, handleFailedRequest } from './ScrapeBase.js'
+import { ScrapeBase } from './ScrapeBase.js'
 
-import { scrapeCache } from './ScrapeBase.js'
-import { preFlight } from './ScrapeBase.js'
-import { postFlight } from './ScrapeBase.js'
-import { scrapeFetch } from './ScrapeBase.js'
 import { reconcileHref } from './utils/reconcile-href.js'
 
 /**
@@ -14,10 +10,12 @@ import { reconcileHref } from './utils/reconcile-href.js'
  * @typedef {import('./Scrape.types.js').ScrapeMethodOptions} ScrapeMethodOptions
  */
 
+import { handleFailedRequest } from './ScrapeBase.js'
+
 export class Scrape extends ScrapeBase {
   /**
    * @param {string} baseURL
-   * @param {ScrapeOptions} [options]
+   * @param {ScrapeOptions} options
    */
   static init(baseURL, options = {}) {
     return new Scrape(baseURL, options)
@@ -85,7 +83,7 @@ export class Scrape extends ScrapeBase {
      * @param {Error} error
      */
     return error => {
-      if (this[handleFailedRequest] !== undefined) {
+      if (this.handleFailedRequest !== undefined) {
         this[handleFailedRequest](error, retry)
       }
 
@@ -104,7 +102,14 @@ export class Scrape extends ScrapeBase {
    * @param {string} href
    */
   getLocalPath(href) {
-    return this[scrapeCache].localResource.getPaths(href).file
+    href = reconcileHref(this.baseURL, href)
+    if (href === null) {
+      throw new Error(
+        `Scrape error: provided value for \`href\` (${href}) cannot be reconciled with the \`baseURL\` (${this.baseURL}) — if this is intentional, use the \`allowDistinctHref\` option`
+      )
+    }
+
+    return this.cache.localResource.getPaths(href).path
   }
 
   /**
@@ -133,9 +138,7 @@ export class Scrape extends ScrapeBase {
         )
       }
       /**
-       * Unable to reconcile href, so reconciledHref is null, but this
-       * is allowed because allowDistinctHref is set to true , so use
-       * the original value of href
+       * allowDistinctHref is set to true, so use the original value of href
        */
       reconciledHref = href
     }
@@ -149,11 +152,11 @@ export class Scrape extends ScrapeBase {
       throw retry.error
     }
 
-    href = await this[preFlight](href)
+    href = await this.preFlight(href)
 
-    if (this[scrapeCache]) {
-      if (invalidate === undefined) {
-        const data = await this[scrapeCache].get(href)
+    if (this.cache) {
+      if (!!invalidate === false) {
+        const data = await this.cache.get(href)
         if (data) return data
       } else {
         console.log(`Invalidated cache for ${href}`)
@@ -164,8 +167,8 @@ export class Scrape extends ScrapeBase {
       return this.inFlightRequests.get(href).request
     }
 
-    const request = this[scrapeFetch](href, init)
-      .then(this[postFlight])
+    const request = this.fetch(href, init)
+      .then(this.postFlight)
       .catch(this.handleFailedRequest(href, options, retry))
 
     this.inFlightRequests.set(href, { request, retry })
