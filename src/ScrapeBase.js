@@ -209,7 +209,15 @@ export class ScrapeBase {
       let handledResponse = response
 
       if (this[handleResponse]) {
-        handledResponse = await this[handleResponse](response)
+        /**
+         * handledResponse is assigned either the result of the
+         * end-user's handleResponse function or else defaults to the
+         * original response received from the fetch; this safe-guard is
+         * in place in case the end-user forgets to return the response
+         * at the end of their handler
+         */
+        handledResponse =
+          (await this[handleResponse](response)) ?? handledResponse
       }
 
       if (
