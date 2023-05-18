@@ -194,10 +194,12 @@ export class ScrapeBase {
      * @returns {(response: Response) => Promise<Response>}
      */
     this.postFlight = skipCache => async response => {
-      if (response.ok === false) {
-        throw new Error(
-          `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`
-        )
+      if (this.returnRawFetchResponse === false) {
+        if (response.ok === false) {
+          throw new Error(
+            `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`
+          )
+        }
       }
 
       if (this.cache !== null && skipCache === false) {
