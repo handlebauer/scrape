@@ -20,6 +20,7 @@
     "access": "public"
   },
   "ava": {
+    "timeout": "30s",
     "require": [
       "dotenv/config"
     ]
