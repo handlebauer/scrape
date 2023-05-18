@@ -179,7 +179,7 @@ test('Should allow for one-off requests using the allowDistinctHref option', asy
   t.is(data.slideshow.title, 'Sample Slide Show')
 })
 
-test.only('Should save a copy of data to a specified path when invoking saveLocalFile', async t => {
+test('Should save a copy of data to a specified path when invoking saveLocalFile', async t => {
   const scraper = Scrape.init(baseURL, { cache: { name: 'httpbin' } })
 
   const href = 'test/saveLocalFile'
@@ -193,4 +193,16 @@ test.only('Should save a copy of data to a specified path when invoking saveLoca
   t.is(await pathExists(targetPath), true)
   t.deepEqual(await scraper.getLocalFile(href), data)
   t.deepEqual(await scraper.scrape(href), data)
+})
+
+test.only('Should skip saving file to cache if the skipCache option is set to true', async t => {
+  const scraper = Scrape.init(baseURL, { cache: { name: 'httpbin' } })
+
+  const href = 'uuid?test=skipCache'
+
+  const response = await scraper.scrape(href, { skipCache: true })
+  const file = await scraper.getLocalFile(href)
+
+  t.is(typeof response.uuid, 'string')
+  t.is(file, null)
 })

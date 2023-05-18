@@ -190,16 +190,17 @@ export class ScrapeBase {
     }
 
     /**
-     * @param {Response} response
+     * @param {boolean} skipCache
+     * @returns {(response: Response) => Promise<Response>}
      */
-    this.postFlight = async response => {
+    this.postFlight = skipCache => async response => {
       if (response.ok === false) {
         throw new Error(
           `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`
         )
       }
 
-      if (this.cache) {
+      if (this.cache !== null && skipCache === false) {
         const { url: href } = response
         const data = await response.clone()[this.responseBodyType]()
         await this.cache.set(href, data)

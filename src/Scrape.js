@@ -145,10 +145,14 @@ export class Scrape extends ScrapeBase {
    */
   async scrape(
     href,
-    options = { invalidate: undefined, allowDistinctHref: false },
+    options = {
+      invalidate: undefined,
+      skipCache: false,
+      allowDistinctHref: false,
+    },
     retry = { attempts: 0, error: null }
   ) {
-    const { invalidate, allowDistinctHref, ...init } = options
+    const { invalidate, skipCache, allowDistinctHref, ...init } = options
 
     /**
      * Either an absolute href or else null
@@ -178,7 +182,7 @@ export class Scrape extends ScrapeBase {
 
     href = await this.preFlight(href)
 
-    if (this.cache) {
+    if (this.cache !== null) {
       if (!!invalidate === false) {
         const data = await this.cache.get(href)
         if (data) return data
@@ -192,7 +196,7 @@ export class Scrape extends ScrapeBase {
     }
 
     const request = this.fetch(href, init)
-      .then(this.postFlight)
+      .then(this.postFlight(skipCache))
       .catch(this.handleFailedRequest(href, options, retry))
 
     this.inFlightRequests.set(href, { request, retry })
