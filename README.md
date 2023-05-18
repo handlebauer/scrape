@@ -18,6 +18,7 @@ const httpbin = Scrape.init(baseURL, {
   contentType, // 'json' | 'html' (defaults to 'json')
   returnRawFetchResponse, // boolean (defaults to false)
   cache: {
+    name, // can be anything, e.g. 'scraper-name' (defaults to undefined)
     fileExtension, // can be anything, e.g. 'json' | 'html' (defaults to undefined)
     disable, // boolean (defaults to undefined — in other words, the cache is initialized by default)
     rootDirectory, // string (defaults to '__cache')
