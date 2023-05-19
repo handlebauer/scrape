@@ -249,10 +249,10 @@
   resolved "https://registry.yarnpkg.com/@hbauer/convenience-functions/-/convenience-functions-0.32.2.tgz#c4a422acd88c1f1655b72fc0fa68f7629b468603"
   integrity sha512-k1ZhtVI9coeTveL2kmkuWVi+EJcjGlceNWAf6GgeRLb2281BB53JRO28/cQibSOYk9jAvChPa6YEqj3UaKkkcw==
 
-"@hbauer/eslint-config@^1.7.2":
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/@hbauer/eslint-config/-/eslint-config-1.7.2.tgz#75ed3339930edb7f5d21401aeae194956198359b"
-  integrity sha512-J0tLsyIFQ0GyRPrqJT1bVIJj8/o4N0qiXABL+350vZfV/lvab5yPz6rXeFlj1GFCgxGYS0aBLd9IWZtcygRXgQ==
+"@hbauer/eslint-config@^1.7.3":
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/@hbauer/eslint-config/-/eslint-config-1.7.3.tgz#78338e7ffbdfcbed75663c4aab97b32b0a0ef7f9"
+  integrity sha512-i1+w6CgG0IEWgj0sxgw3ok5znLZcdBx7Vtt//7kNCE/uFOzCR6W+pr1oCOkt27EDila4fFPoDcUNYvyHZ3g2zQ==
   dependencies:
     "@babel/core" "^7.21.4"
     "@babel/eslint-parser" "^7.21.3"

@@ -4,6 +4,7 @@ import { last, pipe } from 'remeda'
 import { timeSinceFile } from '@hbauer/time-since-file'
 import { plural } from '@hbauer/convenience-functions'
 import { removeSlashes } from './utils/remove-slash.js'
+import { reconcileHref } from './utils/reconcile-href.js'
 
 /**
  * @typedef {import('./LocalResource.types.js').LocalResourceOptions} LocalResourceOptions
@@ -48,23 +49,9 @@ export class LocalResource {
 
   /**
    *
-   * PUBLIC METHODS
+   * PRIVATE STATIC METHODS
    *
    */
-
-  /**
-   * Returns true or false depending on if `path` exsists on the local filesystem
-   *
-   * @param {string} path
-   */
-  static pathExists(path) {
-    try {
-      accessSync(path)
-      return true
-    } catch {
-      return false
-    }
-  }
 
   /**
    * Get the time (per unit) since a file was last updated
@@ -72,7 +59,7 @@ export class LocalResource {
    * @private
    * @param {string} path
    */
-  async sinceUpdated(path) {
+  static async sinceUpdated(path) {
     const since = await timeSinceFile(path)
     return since.updated
   }
@@ -84,7 +71,7 @@ export class LocalResource {
    * @param {string} path
    * @param {ExpiresAfterTime} expiresAfter
    */
-  async isExpired(path, expiresAfter) {
+  static async isExpired(path, expiresAfter) {
     if (expiresAfter === null) {
       return false
     }
@@ -97,7 +84,7 @@ export class LocalResource {
     /**
      * When file was last updated (by unit of time)
      */
-    const sinceUpdated = await this.sinceUpdated(path)
+    const sinceUpdated = await LocalResource.sinceUpdated(path)
 
     /**
      * If expiresAfterUnit is hours and sinceUpdated.hours is 4 then sinceUpdatedTime is 4
@@ -108,9 +95,36 @@ export class LocalResource {
   }
 
   /**
-   * Derives paths for the provided `href` without touching the local filesystem
+   *
+   * PUBLIC STATIC METHODS
+   *
+   */
+
+  /**
+   * Returns true or false depending on if `path` exsists on the local filesystem
    *
    * @public
+   * @param {string} path
+   */
+  static pathExists(path) {
+    try {
+      accessSync(path)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   *
+   * PRIVATE METHODS
+   *
+   */
+
+  /**
+   * Derives paths for the provided `href` without touching the local filesystem
+   *
+   * @private
    * @param {string} href
    * @returns {{ directory: string, filename: string, path: string }}
    */
@@ -166,14 +180,55 @@ export class LocalResource {
   }
 
   /**
+   *
+   * PUBLIC METHODS
+   *
+   */
+
+  /**
+   * Returns the full path if and only if the path exists on the local filesystem.
+   *
+   * If the path doesn't exist, null is returned.
+   *
+   * @public
+   * @param {string} href
+   */
+  getPath(href) {
+    href = reconcileHref(this.baseURL, href)
+
+    if (href === null) {
+      throw new Error(
+        `Scrape error: provided value for \`href\` (${href}) cannot be reconciled with the \`baseURL\` (${this.baseURL})`
+      )
+    }
+
+    const { path } = this.derivePaths(href)
+    const exists = LocalResource.pathExists(path)
+
+    if (exists === true) {
+      return path
+    }
+
+    return null
+  }
+
+  /**
    * Returns paths if and only if the path exists on the local filesystem.
    *
-   * If the path doesn't exist, null is returned for each type of path.
+   * If the path doesn't exist, null is returned.
    *
    * @public
    * @param {string} href
    */
   getPaths(href) {
+    href = reconcileHref(this.baseURL, href)
+
+    if (href === null) {
+      throw new Error(
+        `Scrape error: provided value for \`href\` (${href}) cannot be reconciled with the \`baseURL\` (${this.baseURL})`
+      )
+    }
+
     const paths = this.derivePaths(href)
     const exists = LocalResource.pathExists(paths.path)
 
@@ -181,7 +236,23 @@ export class LocalResource {
       return paths
     }
 
-    return { directory: null, filename: null, path: null }
+    return null
+  }
+
+  /**
+   * @param {string} href
+   */
+  async getMeta(href) {
+    const { directory, filename, path } = this.getPaths(href)
+
+    if (path === null) {
+      return null
+    }
+
+    const sinceUpdated = await LocalResource.sinceUpdated(path)
+    const updatedAt = new Date(Date.now() - sinceUpdated.milliseconds)
+
+    return { directory, filename, path, sinceUpdated, updatedAt }
   }
 
   /**
@@ -222,7 +293,7 @@ export class LocalResource {
     try {
       let data = undefined
 
-      const isExpired = await this.isExpired(path, expiresAfter)
+      const isExpired = await LocalResource.isExpired(path, expiresAfter)
 
       if (isExpired === true) {
         console.log(`Invalidated cache for ${href} (expired)`)

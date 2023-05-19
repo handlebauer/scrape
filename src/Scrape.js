@@ -103,37 +103,39 @@ export class Scrape extends ScrapeBase {
    */
   getLocalPath(href) {
     href = reconcileHref(this.baseURL, href)
+
     if (href === null) {
       throw new Error(
-        `Scrape error: provided value for \`href\` (${href}) cannot be reconciled with the \`baseURL\` (${this.baseURL}) — if this is intentional, use the \`allowDistinctHref\` option`
+        `Scrape error: provided value for \`href\` (${href}) cannot be reconciled with the \`baseURL\` (${this.baseURL})`
       )
     }
 
-    return this.cache.localResource.getPaths(href).path
+    return this.cache.resource.getPath(href)
   }
 
   /**
    * @public
    * @param {string} href
    */
-  getLocalFile(href) {
-    href = reconcileHref(this.baseURL, href)
-    if (href === null) {
-      throw new Error(
-        `Scrape error: provided value for \`href\` (${href}) cannot be reconciled with the \`baseURL\` (${this.baseURL}) — if this is intentional, use the \`allowDistinctHref\` option`
-      )
+  async getLocalFile(href) {
+    const data = await this.cache.get(href)
+
+    if (data === null) {
+      return null
     }
 
-    return this.cache.get(href)
+    const meta = await this.cache.resource.getMeta(href)
+
+    return { data, meta }
   }
 
   /**
    * @public
-   * @param {string} path
+   * @param {string} href
    * @param {any} data
    */
-  addLocalFile(path, data) {
-    return this.cache.set(path, data)
+  addLocalFile(href, data) {
+    return this.cache.set(href, data)
   }
 
   /**

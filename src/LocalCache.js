@@ -28,7 +28,7 @@ export class LocalCache {
       name,
       extension: fileExtension,
     }
-    this.localResource = new LocalResource(baseURL, localResourceOptions)
+    this.resource = new LocalResource(baseURL, localResourceOptions)
 
     /**
      * @private
@@ -106,7 +106,7 @@ export class LocalCache {
    * @param {ExpiresAfterTime} [expiresAfter]
    */
   get(href, expiresAfter = null) {
-    return this.localResource
+    return this.resource
       .read(href, expiresAfter)
       .then(this.decode)
       .catch(LocalCache.logGetError(href))
@@ -121,7 +121,7 @@ export class LocalCache {
    */
   set(href, data) {
     const encoded = this.encode(data)
-    return this.localResource
+    return this.resource
       .write(href, encoded)
       .catch(LocalCache.logSetError(href))
   }

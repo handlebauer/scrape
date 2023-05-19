@@ -48,7 +48,7 @@ export class ScrapeBase {
     /**
      * @public
      */
-    this.responseBodyType = this.responseBodyTypes[contentType]
+    this.responseBodyType = ScrapeBase.responseBodyTypes[contentType]
 
     /**
      * @private
@@ -136,11 +136,8 @@ export class ScrapeBase {
    * @private
    * @readonly
    */
-  get responseBodyTypes() {
-    return /** @type {const} */ ({
-      html: 'text',
-      json: 'json',
-    })
+  static get responseBodyTypes() {
+    return /** @type {const} */ ({ html: 'text', json: 'json' })
   }
 
   /**

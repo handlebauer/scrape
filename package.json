@@ -37,7 +37,7 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@hbauer/eslint-config": "^1.7.2",
+    "@hbauer/eslint-config": "^1.7.3",
     "@hbauer/prettier-config": "^1.1.0",
     "@types/node": "^20.1.5",
     "ava": "^5.2.0",

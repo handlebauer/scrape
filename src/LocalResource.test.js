@@ -13,6 +13,7 @@ test('Should return correct paths for a top-level resource', t => {
 
   const href = 'page'
 
+  // @ts-ignore
   const { directory, filename, path } = localResource.derivePaths(href)
 
   t.is(directory, '__cache/test')
@@ -29,6 +30,7 @@ test('Should return correct paths for a nested resource', t => {
 
   const href = 'path/to/page'
 
+  // @ts-ignore
   const { directory, filename, path } = localResource.derivePaths(href)
 
   t.is(directory, '__cache/test/path/to')

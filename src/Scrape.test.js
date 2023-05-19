@@ -90,7 +90,7 @@ test('Should successfully save HTML with an .html extension if configured', asyn
   t.is(derivedPath, targetPath)
 })
 
-test('Should return a local file if it exists upon invoking getLocalFile', async t => {
+test('Should return a local file alongside metadata if the file exists upon invoking getLocalFile', async t => {
   const contentType = 'html'
 
   const scraper = Scrape.init(baseURL, {
@@ -100,12 +100,25 @@ test('Should return a local file if it exists upon invoking getLocalFile', async
 
   const href = `${contentType}?test=return-existing-local-file`
 
+  const timeBeforeScrape = Date.now()
+
   await scraper.scrape(href)
 
-  const file = await scraper.getLocalFile(href)
+  const { data, meta } = await scraper.getLocalFile(href)
 
-  t.is(typeof file, 'string')
-  t.true(file.startsWith('<!DOCTYPE html>'))
+  t.is(typeof data, 'string')
+  t.true(data.startsWith('<!DOCTYPE html>'))
+
+  t.is(meta.directory, `${rootDirectory}/${name}`)
+  t.is(meta.filename, href)
+  t.is(meta.path, `${rootDirectory}/${name}/${href}`)
+
+  t.true(meta.sinceUpdated.milliseconds > 0)
+  t.true(meta.sinceUpdated.milliseconds < timeBeforeScrape)
+
+  t.true(meta.updatedAt instanceof Date)
+  t.is(isNaN(meta.updatedAt.getTime()), false) // detect invalid date
+  t.true(meta.updatedAt.getTime() > timeBeforeScrape) // updated time is newer than before scrape
 })
 
 test("Should return null upon invoking getLocalFile if the file doesn't exist", async t => {
@@ -224,7 +237,7 @@ test('Should save a copy of data to a specified path when invoking addLocalFile'
 
   t.is(success, true)
   t.is(await pathExists(targetPath), true)
-  t.deepEqual(await scraper.getLocalFile(href), data)
+  t.deepEqual(await scraper.getLocalFile(href).then(({ data }) => data), data)
   t.deepEqual(await scraper.scrape(href), data)
 })
 
@@ -240,7 +253,7 @@ test('Should skip saving file to cache if the skipCache option is set to true', 
   t.is(file, null)
 })
 
-test.only('Should refetch a resource if the file is older than the expiresAfter option', async t => {
+test('Should refetch a resource if the file is older than the expiresAfter option', async t => {
   const scraper = Scrape.init(baseURL, { cache: { name } })
 
   const href = 'uuid?test=expiresAfter'
