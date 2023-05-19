@@ -43,6 +43,8 @@
  *
  * @typedef {'millisecond' | 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'} ScrapeTimeUnitsSingular
  * @typedef {'milliseconds' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months' | 'years'} ScrapeTimeUnits
+ *
+ * TODO: if number is 1, only create union with ScrapeTimeUnitsSingular
  * @typedef {[number, ScrapeTimeUnits | ScrapeTimeUnitsSingular]} ExpiresAfterTime
  *
  * @typedef {{
@@ -51,7 +53,7 @@
  * }} ScrapeMethodInvalidateOptions
  *
  * @typedef {{
- * invalidate?: { force?: boolean, ago: ExpiresAfterTime }
+ * invalidate?: { force?: boolean, ago?: ExpiresAfterTime }
  * skipCache?: boolean
  * allowDistinctHref?: boolean
  * }} ScrapeMethodOptions
