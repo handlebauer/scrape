@@ -1,10 +1,14 @@
 import { accessSync } from 'fs'
 import { readFile, writeFile, mkdir } from 'fs/promises'
 import { last, pipe } from 'remeda'
+import { timeSinceFile } from '@hbauer/time-since-file'
+import { plural } from '@hbauer/convenience-functions'
 import { removeSlashes } from './utils/remove-slash.js'
 
 /**
  * @typedef {import('./LocalResource.types.js').LocalResourceOptions} LocalResourceOptions
+ *
+ * @typedef {import('./Scrape.types.js').ExpiresAfterTime} ExpiresAfterTime
  */
 
 export class LocalResource {
@@ -53,13 +57,54 @@ export class LocalResource {
    *
    * @param {string} path
    */
-  pathExists(path) {
+  static pathExists(path) {
     try {
       accessSync(path)
       return true
     } catch {
       return false
     }
+  }
+
+  /**
+   * Get the time (per unit) since a file was last updated
+   *
+   * @private
+   * @param {string} path
+   */
+  async sinceUpdated(path) {
+    const since = await timeSinceFile(path)
+    return since.updated
+  }
+
+  /**
+   * Determine whether a file is expired or not based on provided expiry params
+   *
+   * @private
+   * @param {string} path
+   * @param {ExpiresAfterTime} expiresAfter
+   */
+  async isExpired(path, expiresAfter) {
+    if (expiresAfter === null) {
+      return false
+    }
+
+    /**
+     * If expiresAfter is [3, 'hours'] then expiresAfterTime is 3 and expiresAfterUnit is 'hours'
+     */
+    let [expiresAfterTime, expiresAfterUnit] = expiresAfter
+
+    /**
+     * When file was last updated (by unit of time)
+     */
+    const sinceUpdated = await this.sinceUpdated(path)
+
+    /**
+     * If expiresAfterUnit is hours and sinceUpdated.hours is 4 then sinceUpdatedTime is 4
+     */
+    const sinceUpdatedTime = sinceUpdated[plural(expiresAfterUnit)]
+
+    return sinceUpdatedTime > expiresAfterTime
   }
 
   /**
@@ -121,14 +166,16 @@ export class LocalResource {
   }
 
   /**
-   * Returns paths if and only if the path exists on the local filesystem
+   * Returns paths if and only if the path exists on the local filesystem.
+   *
+   * If the path doesn't exist, null is returned for each type of path.
    *
    * @public
    * @param {string} href
    */
   getPaths(href) {
     const paths = this.derivePaths(href)
-    const exists = this.pathExists(paths.path)
+    const exists = LocalResource.pathExists(paths.path)
 
     if (exists === true) {
       return paths
@@ -138,6 +185,9 @@ export class LocalResource {
   }
 
   /**
+   * Write a file to the local filesystem. The provided value for data
+   * must be of type string.
+   *
    * @public
    * @param {string} href
    * @param {string} data
@@ -160,14 +210,26 @@ export class LocalResource {
   }
 
   /**
+   * Read a file from the local filesystem. If the file is expired,
+   * return null. If the file doesn't yet exist, return null.
+   *
    * @public
    * @param {string} href
+   * @param {ExpiresAfterTime} [expiresAfter]
    */
-  async read(href) {
+  async read(href, expiresAfter = null) {
     const { path } = this.derivePaths(href)
-
     try {
-      const data = await readFile(path, 'utf-8')
+      let data = undefined
+
+      const isExpired = await this.isExpired(path, expiresAfter)
+
+      if (isExpired === true) {
+        console.log(`Invalidated cache for ${href} (expired)`)
+        return null
+      }
+
+      data = await readFile(path, 'utf-8')
       return data
     } catch (error) {
       /**

@@ -244,6 +244,11 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.40.0.tgz#3ba73359e11f5a7bd3e407f70b3528abfae69cec"
   integrity sha512-ElyB54bJIhXQYVKjDSvCkPO1iU1tSAeVQJbllWJq1XQSmmA4dgFk8CbiBGpiOPxleE48vDogxCtmMYku4HSVLA==
 
+"@hbauer/convenience-functions@^0.32.2":
+  version "0.32.2"
+  resolved "https://registry.yarnpkg.com/@hbauer/convenience-functions/-/convenience-functions-0.32.2.tgz#c4a422acd88c1f1655b72fc0fa68f7629b468603"
+  integrity sha512-k1ZhtVI9coeTveL2kmkuWVi+EJcjGlceNWAf6GgeRLb2281BB53JRO28/cQibSOYk9jAvChPa6YEqj3UaKkkcw==
+
 "@hbauer/eslint-config@^1.7.2":
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/@hbauer/eslint-config/-/eslint-config-1.7.2.tgz#75ed3339930edb7f5d21401aeae194956198359b"
@@ -259,6 +264,14 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@hbauer/prettier-config/-/prettier-config-1.1.0.tgz#c9a2aff583e4d88a89ecf8587361e82f8c1e268d"
   integrity sha512-bGpnP9vdX6gXFhNm3QS9fYDfmFKGRWDsAkfbquMTsSCd0zpVbMw5gGxAXfRksB8WI4p7a3pYscLz8MHIUt0n6g==
+
+"@hbauer/time-since-file@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@hbauer/time-since-file/-/time-since-file-0.2.0.tgz#2c36225ada417a42c370a22f715d26737b77f8fd"
+  integrity sha512-J8JRmV/jWG9KNLImt/ih3NUW5iNyHbLtq9r3fyAhlAoYpKoy1Qf3HMPpZvToEWjevgNMcATAIADzOd+a/Fj+kg==
+  dependencies:
+    dayjs "^1.11.7"
+    remeda "^1.14.0"
 
 "@hbauer/timer@^0.2.0":
   version "0.2.0"
@@ -807,6 +820,11 @@ date-time@^3.1.0:
   integrity sha512-uqCUKXE5q1PNBXjPqvwhwJf9SwMoAHBgWJ6DcrnS5o+W2JOiIILl0JEdVD8SGujrNS02GGxgwAg2PN2zONgtjg==
   dependencies:
     time-zone "^1.0.0"
+
+dayjs@^1.11.7:
+  version "1.11.7"
+  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.7.tgz#4b296922642f70999544d1144a2c25730fce63e2"
+  integrity sha512-+Yw9U6YO5TQohxLcIkrXBeY73WP3ejHWVvx8XCk3gxvQDCTEmS48ZrSZCKciI7Bhl/uCMyxYtE9UqRILmFphkQ==
 
 debug@^3.2.7:
   version "3.2.7"

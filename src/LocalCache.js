@@ -5,6 +5,8 @@ import { LocalResource } from './LocalResource.js'
  * @typedef {import('./LocalCache.types.js').LocalCacheOptions} LocalCacheOptions
  *
  * @typedef {import('./LocalResource.types.js').LocalResourceOptions} LocalResourceOptions
+ *
+ * @typedef {import('./Scrape.types.js').ExpiresAfterTime} ExpiresAfterTime
  */
 
 export class LocalCache {
@@ -97,17 +99,22 @@ export class LocalCache {
    */
 
   /**
+   * Get a file from the cache
+   *
    * @public
    * @param {string} href
+   * @param {ExpiresAfterTime} [expiresAfter]
    */
-  get(href) {
+  get(href, expiresAfter = null) {
     return this.localResource
-      .read(href)
+      .read(href, expiresAfter)
       .then(this.decode)
       .catch(LocalCache.logGetError(href))
   }
 
   /**
+   * Set a new value for a provided href
+   *
    * @public
    * @param {string} href
    * @param {any} data

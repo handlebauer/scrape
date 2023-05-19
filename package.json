@@ -50,6 +50,8 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "@hbauer/convenience-functions": "^0.32.2",
+    "@hbauer/time-since-file": "^0.2.0",
     "@hbauer/timer": "^0.2.0",
     "p-retry": "^5.1.2",
     "p-throttle": "^5.1.0",

@@ -41,7 +41,22 @@
  * error: Error
  * }} ScrapeRetryInfo
  *
- * @typedef {RequestInit & { invalidate?: boolean, skipCache?: boolean, allowDistinctHref?: boolean }} ScrapeMethodOptions
+ * @typedef {'millisecond' | 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'} ScrapeTimeUnitsSingular
+ * @typedef {'milliseconds' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months' | 'years'} ScrapeTimeUnits
+ * @typedef {[number, ScrapeTimeUnits | ScrapeTimeUnitsSingular]} ExpiresAfterTime
+ *
+ * @typedef {{
+ * force?: boolean
+ * ago?: ExpiresAfterTime
+ * }} ScrapeMethodInvalidateOptions
+ *
+ * @typedef {{
+ * invalidate?: { force?: boolean, ago: ExpiresAfterTime }
+ * skipCache?: boolean
+ * allowDistinctHref?: boolean
+ * }} ScrapeMethodOptions
+ *
+ * @typedef {RequestInit & ScrapeMethodOptions} RequestInitScrapeMethodOptions
  *
  */
 

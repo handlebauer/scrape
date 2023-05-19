@@ -7,7 +7,7 @@ import { reconcileHref } from './utils/reconcile-href.js'
  * @typedef {import('./Scrape.types.js').ScrapeRetryOptions} ScrapeRetryOptions
  * @typedef {import('./Scrape.types.js').ScrapeRetryInfo} ScrapeRetryInfo
  * @typedef {import('./Scrape.types.js').ScrapeInFlightRequest} ScrapeInFlightRequest
- * @typedef {import('./Scrape.types.js').ScrapeMethodOptions} ScrapeMethodOptions
+ * @typedef {import('./Scrape.types.js').RequestInitScrapeMethodOptions} RequestInitScrapeMethodOptions
  */
 
 import { handleFailedRequest } from './ScrapeBase.js'
@@ -139,20 +139,19 @@ export class Scrape extends ScrapeBase {
   /**
    * @public
    * @param {string} href
-   * @param {ScrapeMethodOptions} [options]
+   * @param {RequestInitScrapeMethodOptions} [options]
    * @param {ScrapeRetryInfo} [retry]
    * @returns {Promise<any>}
    */
-  async scrape(
-    href,
-    options = {
-      invalidate: undefined,
-      skipCache: false,
-      allowDistinctHref: false,
-    },
-    retry = { attempts: 0, error: null }
-  ) {
-    const { invalidate, skipCache, allowDistinctHref, ...init } = options
+  async scrape(href, options = {}, retry = { attempts: 0, error: null }) {
+    let { invalidate, skipCache, allowDistinctHref, ...init } = options
+
+    invalidate = {
+      force: invalidate?.force || false,
+      ago: invalidate?.ago || null,
+    }
+    skipCache = skipCache || false
+    allowDistinctHref = allowDistinctHref || false
 
     /**
      * Either an absolute href or else null
@@ -176,6 +175,9 @@ export class Scrape extends ScrapeBase {
      */
     href = reconciledHref
 
+    /**
+     * If retry attempts have run out, return an error
+     */
     if (retry.attempts > this.retryOptions.attempts) {
       throw retry.error
     }
@@ -183,8 +185,8 @@ export class Scrape extends ScrapeBase {
     href = await this.preFlight(href)
 
     if (this.cache !== null) {
-      if (!!invalidate === false) {
-        const data = await this.cache.get(href)
+      if (invalidate.force === false) {
+        const data = await this.cache.get(href, invalidate.ago)
         if (data) return data
       } else {
         console.log(`Invalidated cache for ${href}`)

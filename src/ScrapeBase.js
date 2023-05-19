@@ -191,46 +191,56 @@ export class ScrapeBase {
 
     /**
      * @param {boolean} skipCache
-     * @returns {(response: Response) => Promise<Response>}
      */
-    this.postFlight = skipCache => async response => {
-      if (this.returnRawFetchResponse === false) {
-        if (response.ok === false) {
-          throw new Error(
-            `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`
-          )
+    this.postFlight =
+      skipCache =>
+      /**
+       * @param {Response} response
+       */
+      async response => {
+        if (this.returnRawFetchResponse === false) {
+          if (response.ok === false) {
+            throw new Error(
+              `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`
+            )
+          }
         }
-      }
 
-      if (this.cache !== null && skipCache === false) {
-        const { url: href } = response
-        const data = await response.clone()[this.responseBodyType]()
-        await this.cache.set(href, data)
-      }
+        if (this.cache !== null && skipCache === false) {
+          const { url: href } = response
+          const data = await response.clone()[this.responseBodyType]()
+          await this.cache.set(href, data)
+        }
 
-      let handledResponse = response
+        let handledResponse = response
 
-      if (this.handleResponse) {
+        if (this.handleResponse) {
+          /**
+           * handledResponse is assigned either the result of the
+           * end-user's handleResponse function or else defaults to the
+           * response received from the origional fetch; this safe-guard is
+           * in place in case the end-user forgets to return the response
+           * at the end of their handler
+           */
+          handledResponse =
+            (await this.handleResponse(response)) ?? handledResponse
+        }
+
         /**
-         * handledResponse is assigned either the result of the
-         * end-user's handleResponse function or else defaults to the
-         * original response received from the fetch; this safe-guard is
-         * in place in case the end-user forgets to return the response
-         * at the end of their handler
+         * handledResponse can be anything after calling handleResponse.
+         * If it's still an instance of Response, and the user hasn't
+         * specified that they want the raw Response returned, decode
+         * the response by body type.
          */
-        handledResponse =
-          (await this.handleResponse(response)) ?? handledResponse
-      }
+        if (
+          handledResponse instanceof Response &&
+          this.returnRawFetchResponse === false
+        ) {
+          handledResponse = await handledResponse[this.responseBodyType]()
+        }
 
-      if (
-        handledResponse instanceof Response &&
-        this.returnRawFetchResponse === false
-      ) {
-        handledResponse = await handledResponse[this.responseBodyType]()
+        return handledResponse
       }
-
-      return handledResponse
-    }
   }
 
   /**
