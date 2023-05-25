@@ -119,7 +119,7 @@ export class ScrapeBase {
 
   /**
    * @template {ScrapeMethodOptions} T
-   * @typedef {IfNotRawResponse<IfSkipCache<IfJSONContent<JSONData, HTMLData>, IfCache<LocalFile, Response>, T>, Response>} ScrapeResponse
+   * @typedef {IfNotRawResponse<IfSkipCache<IfJSONContent<JSONData, HTMLData>, IfCache<LocalFile<any>, Response>, T>, Response>} ScrapeResponse
    */
 
   /**
@@ -178,7 +178,7 @@ export class ScrapeBase {
         let data = undefined
 
         /**
-         * @type {LocalFile}
+         * @type {LocalFile<any>}
          */
         let file = undefined
 
