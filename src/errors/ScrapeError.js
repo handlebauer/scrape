@@ -1,7 +1,8 @@
 import { ZodError } from 'zod'
+import { formatZodError } from './format-zod-error.js'
 
 /**
- * @typedef {(Error & NodeJS.ErrnoException | ZodError) & { status: number, code: string }} ScrapeParentError
+ * @typedef {(Error & NodeJS.ErrnoException | ZodError) & { status?: number, code?: string }} ScrapeParentError
  */
 
 export class ScrapeError extends Error {
@@ -19,7 +20,7 @@ export class ScrapeError extends Error {
    * @param {string} title
    * @param {ScrapeErrorParams} params
    */
-  constructor(title, { message, parent, formatParent, status, code }) {
+  constructor(title, { message, parent, formatParent, status, code } = {}) {
     super()
 
     if (title) {
@@ -35,12 +36,13 @@ export class ScrapeError extends Error {
     }
 
     if (parent) {
-      if (formatParent) {
-        message = formatParent(parent)
+      if (parent instanceof ZodError) {
+        this.message += formatZodError(parent)
+      } else if (formatParent) {
+        this.message += ' ' + '[' + formatParent(parent) + ']'
       } else {
-        message = parent.message
+        this.message += ' ' + '[' + parent.message + ']'
       }
-      this.message += ' ' + '[' + message + ']'
     }
 
     if (status || parent?.status) {
