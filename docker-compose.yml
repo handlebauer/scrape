@@ -1,0 +1,7 @@
+version: '3'
+services:
+  httpbin:
+    container_name: scrape
+    image: kennethreitz/httpbin
+    ports:
+      - 8080:80

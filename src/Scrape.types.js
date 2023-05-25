@@ -1,65 +1,102 @@
+// eslint-disable-next-line no-unused-vars
+import { fileAgeDuration } from '@hbauer/local-file/parameters.js'
+// eslint-disable-next-line no-unused-vars
+import { z } from 'zod'
+
+import { Scrape } from './Scrape.js'
+import { ScrapeError } from './errors/ScrapeError.js'
+
 /**
- * Scrape
+ * EXTERNAL
  *
- * @typedef {(url: URL) => URL} ScrapeHandleRequestFunction
- * @typedef {(response: Response) => any} ScrapeHandleResponseFunction
- * @typedef {(error: Error, retry: ScrapeRetryInfo) => void} ScrapeHandleFailedRequestFunction
- *
- * @typedef {Partial<{ request: ScrapeHandleRequestFunction, response: ScrapeHandleResponseFunction, failedRequest: ScrapeHandleFailedRequestFunction }>} AddHandlerParameters
- *
- * @typedef {{
- * rootDirectory?: string
- * name?: string
- * fileExtension?: string,
- * disable?: boolean
- * }} ScrapeCacheOptions
- *
- * @typedef {{
- * attempts?: number
- * }} ScrapeRetryOptions
- *
- * @typedef {{
- * interval?: number
- * limit?: number
- * }} ScrapeThrottleOptions
- *
- * @typedef {{
- * contentType?: import('./types.js').ResourceContentType
- * returnRawFetchResponse?: boolean
- * cache?: ScrapeCacheOptions
- * retry?: ScrapeRetryOptions
- * throttle?: ScrapeThrottleOptions
- * }} ScrapeOptions
- *
- * @typedef {{
- * retry: { attempts: number, error: Error }
- * request: Promise<Response>
- * }} ScrapeInFlightRequest
- *
- * @typedef {{
- * attempts: number
- * error: Error
- * }} ScrapeRetryInfo
- *
- * @typedef {'millisecond' | 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'} ScrapeTimeUnitsSingular
- * @typedef {'milliseconds' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months' | 'years'} ScrapeTimeUnits
- *
- * TODO: if number is 1, only create union with ScrapeTimeUnitsSingular
- * @typedef {[number, ScrapeTimeUnits | ScrapeTimeUnitsSingular]} ExpiresAfterTime
- *
- * @typedef {{
- * force?: boolean
- * ago?: ExpiresAfterTime
- * }} ScrapeMethodInvalidateOptions
- *
- * @typedef {{
- * invalidate?: { force?: boolean, ago?: ExpiresAfterTime }
- * skipCache?: boolean
- * allowDistinctHref?: boolean
- * }} ScrapeMethodOptions
- *
- * @typedef {RequestInit & ScrapeMethodOptions} RequestInitScrapeMethodOptions
- *
+ * @typedef {import('p-throttle').Options} PThrottleOptions
  */
 
-export {}
+/**
+ * COMMON
+ *
+ * @typedef {string} ScrapeURLBase
+ * @typedef {'json' | 'html'} ScrapeContentType
+ *
+ * @typedef {import('./errors/ScrapeError.js').ScrapeParentError} ScrapeParentError
+ */
+
+/**
+ * CLASS
+ *
+ * @typedef {{
+ * cache: true | false,
+ * returnRawResponse: true | false
+ * }} ScrapeClassOptions
+ */
+
+/**
+ * INIT
+ */
+/**
+ * @template X, Y
+ * @template {ScrapeInitOptions} T
+ * @typedef {true extends T['cache']['enabled'] ? X : Y} WithCache
+ */
+/**
+ * @template X, Y
+ * @template {ScrapeInitOptions} T
+ * @typedef {'json' extends T['contentType'] ? X : Y} AsJSON
+ */
+/**
+ * @template X, Y
+ * @template {ScrapeInitOptions} T
+ * @typedef {false extends T['returnRawResponse'] ? X : Y} NotRawResponse
+ */
+/**
+ * @template {boolean} A
+ * @template {boolean} B
+ * @typedef {{ cache: A, returnRawResponse: B }} GenericClassOptions
+ */
+/**
+ * @template {'json' | 'html'} S
+ * @template {boolean} C
+ * @template {boolean} R
+ * @typedef {Scrape<S, GenericClassOptions<C, R>>} Scraper
+ */
+/**
+ * @typedef {'json'} JSON
+ * @typedef {'html'} HTML
+ * @typedef {true} Cache
+ * @typedef {false} FalseCache
+ * @typedef {true} RawResponse
+ * @typedef {false} FalseRawResponse
+ */
+/**
+ * @template {ScrapeInitOptions} X
+ * @typedef {AsJSON<NotRawResponse<Scraper<JSON, Cache, FalseRawResponse>, Scraper<JSON, Cache, RawResponse>, X>, NotRawResponse<Scraper<HTML, Cache, FalseRawResponse>, Scraper<HTML, Cache, RawResponse>, X>, X>} IfCache
+ */
+/**
+ * @template {ScrapeInitOptions} X
+ * @typedef {AsJSON<NotRawResponse<Scraper<JSON, FalseCache, FalseRawResponse>, Scraper<JSON, FalseCache, RawResponse>, X>, NotRawResponse<Scraper<HTML, FalseCache, FalseRawResponse>, Scraper<HTML, FalseCache, RawResponse>, X>, X>} IfNoCache
+ */
+
+/**
+ * @template {ScrapeInitOptions} T
+ * @typedef {WithCache<IfCache<T>,Scrape<'json', {cache: false, returnRawResponse: false}>, T>} InitResponse
+ */
+
+/**
+ * INIT OPTIONS
+ *
+ * @typedef {{
+ * contentType?: 'json' | 'html'
+ * returnRawResponse?: boolean
+ * cache?: ScrapeCacheOptions
+ * retry?: { number?: number }
+ * throttle?: { limit?: number, interval?: number }
+ * }} ScrapeInitOptions
+ *
+ * @typedef {{
+ * rootDirectory?: string,
+ * name?: string,
+ * fileExtension?: string,
+ * enabled?: boolean
+ * }} ScrapeCacheOptions
+ *
+ */

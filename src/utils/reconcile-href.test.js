@@ -3,36 +3,31 @@ import { reconcileHref } from './reconcile-href.js'
 
 const baseURL = 'https://httpbin.org'
 
-test('Should return null if provided with invalid params', t => {
-  t.is(reconcileHref(baseURL, null), null)
-  t.is(reconcileHref(baseURL, ''), null)
+/**
+ * NOTE: tests don't guard for baseURL as baseURL is always already validated in practice
+ */
+
+test('Should throw an error if the values passed in are not valid', t => {
   // @ts-ignore
-  t.is(reconcileHref(baseURL), null)
+  t.throws(() => reconcileHref(baseURL))
+  t.throws(() => reconcileHref(baseURL, ''))
+  t.throws(() => reconcileHref(baseURL, null))
+  t.throws(() => reconcileHref(baseURL, undefined))
   // @ts-ignore
-  t.is(reconcileHref(baseURL, 0), null)
+  t.throws(() => reconcileHref(baseURL, 0))
+  // @ts-ignore
+  t.throws(() => reconcileHref(baseURL, Symbol('not a href')))
 })
 
-test('Should return absolute href if provided with relative href', t => {
-  const href = 'path/to/resource'
+test('Should return null if the href is unable to be reconciled', t => {
+  const href = 'http://httpbin.org' // http vs https
 
-  const reconciledHref = reconcileHref(baseURL, href)
-
-  t.is(reconciledHref, 'https://httpbin.org/path/to/resource')
+  t.is(reconcileHref(baseURL, href), null)
 })
 
-test('Should return absolute href if provided with absolute href', t => {
-  const href = 'https://httpbin.org/path/to/resource'
+test('Should return a valid href whether provided a relative or absolute href', t => {
+  const expected = 'https://httpbin.org/relative'
 
-  const reconciledHref = reconcileHref(baseURL, href)
-
-  t.is(reconciledHref, 'https://httpbin.org/path/to/resource')
-})
-
-test('Should return null if provided with an absolute href with a different base than baseURL', t => {
-  // NOTE: uses 'http' vs. 'https'
-  const href = 'http://httpbin.org/path/to/resource'
-
-  const reconciledHref = reconcileHref(baseURL, href)
-
-  t.is(reconciledHref, null)
+  t.is(reconcileHref(baseURL, 'relative'), expected)
+  t.is(reconcileHref(baseURL, 'https://httpbin.org/relative'), expected)
 })

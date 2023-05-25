@@ -1,27 +1,30 @@
-import { removeSlashes } from './remove-slash.js'
+import * as validate from '../parameters/common.js'
+
+/**
+ * @typedef {import('../Scrape.types.js').ScrapeURLBase} ScrapeURLBase
+ * @typedef {import('../common.types.js').ScrapeHref} ScrapeHref
+ */
 
 /**
  * Reconciles a baseURL with the provided href
  *
- * @param {string} baseURL
- * @param {string} href
+ * @param {ScrapeURLBase} baseURL
+ * @param {ScrapeHref} href
  * @example
  * const baseURL = 'https://example.com'
  * const href = 'path/to/resource'
- * reconcileHref(baseUURL, href) //= 'https://example.com/path/to/resource'
- * reconcileHref(baseURL, baseURL + '/' + href) //= 'https://example.com/path/to/resource'
- * reconcileHref(baseURL, 'https://not-example.com' + '/' + href) //= null
+ *
+ * const relative = reconcileHref(baseURL, href)
+ * const absolute = reconcileHref(baseURL, baseURL + '/' + href)
+ *
+ * assert.equals(relative, absolute)
+ *
+ * reconcileHref(baseURL, 'https://different.com/path') //= null
  */
 export const reconcileHref = (baseURL, href) => {
-  if (!!href === false) {
-    return null
-  }
+  href = validate.href.parse(href)
 
-  href = removeSlashes(href)
-
-  const isAbsolute = href.startsWith('http') === true
-
-  if (isAbsolute) {
+  if (href.startsWith('http') === true) {
     if (href.startsWith(baseURL) === true) {
       return href
     }

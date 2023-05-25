@@ -1,289 +1,262 @@
-import pThrottle from 'p-throttle'
-import { LocalCache } from './LocalCache.js'
-import { removeSlashes } from './utils/remove-slash.js'
+import { LocalHTTPCache } from '@hbauer/local-cache'
+import { keys } from 'remeda'
+import { LocalFile } from '@hbauer/local-file'
+import { ScrapeError } from './errors/ScrapeError.js'
 
 /**
- * @typedef {import('./types.js').ThrottleOptions} ThrottleOptions
+ * @typedef {import('./Scrape.types.js').ScrapeClassOptions} ScrapeClassOptions
  *
- * @typedef {import('./Scrape.types.js').ScrapeOptions} ScrapeOptions
- * @typedef {import('./LocalCache.types.js').LocalCacheOptions} LocalCacheOptions
+ * @typedef {import('./Scrape.types.js').ScrapeURLBase} ScrapeURLBase
+ * @typedef {import('./Scrape.types.js').ScrapeContentType} ScrapeContentType
  *
- * @typedef {import('./Scrape.types.js').AddHandlerParameters} AddHandlerParameters
- * @typedef {import('./Scrape.types.js').ScrapeHandleRequestFunction} ScrapeHandleRequestFunction
- * @typedef {import('./Scrape.types.js').ScrapeHandleResponseFunction} ScrapeHandleResponseFunction
- * @typedef {import('./Scrape.types.js').ScrapeHandleFailedRequestFunction} ScrapeHandleFailedRequestFunction
+ * @typedef {import('./Scrape.types.js').ScrapeInitOptions} ScrapeInitOptions
+ *
+ * @typedef {import('./common.types.js').ScrapeHref} ScrapeHref
+ * @typedef {import('./common.types.js').ScrapeMethodOptions} ScrapeMethodOptions
+ * @typedef {import('./common.types.js').ScrapeResponseData} ScrapeResponseData
+ *
+ * @typedef {import('./ScrapeBase.types.js').ScrapeRequestHandler} ScrapeRequestHandler
+ * @typedef {import('./ScrapeBase.types.js').ScrapeResponseHandler} ScrapeResponseHandler
+ * @typedef {import('./ScrapeBase.types.js').ScrapeFailedRequestHandler} ScrapeFailedRequestHandler
+ * @typedef {import('./ScrapeBase.types.js').ScrapeHandler} ScrapeHandler
+ * @typedef {import('./ScrapeBase.types.js').ScrapeHandlerType} ScrapeHandlerType
+ * @typedef {import('./common.types.js').JSONData} JSONData
+ * @typedef {import('./common.types.js').HTMLData} HTMLData
  */
 
-export const handleFailedRequest = Symbol('handleFailedRequest')
-
+/**
+ * @template {ScrapeContentType} [ContentType='json']
+ * @template {ScrapeClassOptions} [ClassOptions={ cache: true, returnRawResponse: false }]
+ */
 export class ScrapeBase {
   /**
-   * @param {string} baseURL
-   * @param {ScrapeOptions} [opts]
+   * @param {ScrapeURLBase} baseURL
+   * @param {ScrapeInitOptions} options
+   * @param {LocalHTTPCache} cache
    */
-  constructor(
-    baseURL,
-    {
-      contentType = 'json',
-      returnRawFetchResponse = false,
-      cache = {},
-      throttle = {},
-    } = {}
-  ) {
+  constructor(baseURL, options, cache) {
     /**
      * @public
      */
-    this.baseURL = removeSlashes(baseURL)
+    this.baseURL = baseURL
 
     /**
      * @public
      */
-    this.contentType = contentType
+    this.contentType = options.contentType
 
     /**
      * @public
      */
-    this.returnRawFetchResponse = returnRawFetchResponse
+    this.returnRawResponse = options.returnRawResponse
 
     /**
      * @public
      */
-    this.responseBodyType = ScrapeBase.responseBodyTypes[contentType]
+    this.cache = cache
 
     /**
-     * @private
-     * @type {ThrottleOptions}
+     * @public
      */
-    this.throttleOptions = {
-      limit: throttle.limit || 1,
-      interval: throttle.interval || 1000,
+    this.handlers = {
+      /**
+       * @type {ScrapeRequestHandler}
+       */
+      request: null,
+      /**
+       * @type {ScrapeResponseHandler}
+       */
+      response: null,
+      /**
+       * @type {ScrapeFailedRequestHandler}
+       */
+      failedRequest: null,
     }
+  }
 
-    if (cache.disable === true) {
-      /**
-       * @public
-       */
-      this.cache = null
-    } else {
-      /**
-       * @type {LocalCacheOptions}
-       */
-      const cacheOptions = {
-        rootDirectory: cache.rootDirectory,
-        name: cache.name,
-        fileExtension: cache.fileExtension,
+  /**
+   * @public
+   */
+  get responseBodyType() {
+    // prettier-ignore
+    return /** @type {ContentType extends 'html' ? 'text' : 'json'} */ (this.contentType === 'html' ? 'text' : 'json')
+  }
+
+  /**
+   * @public
+   * @param {ScrapeHref} href
+   * @returns {Promise<ScrapeHref>}
+   */
+  async preFlight(href) {
+    if (this.handlers.request !== null) {
+      const url = new URL(href)
+      const handled = await this.handlers.request(url)
+      return handled.toString()
+    }
+    return href
+  }
+
+  /**
+   * @template A, B
+   * @typedef {ContentType extends 'json' ? A : B} IfJSONContent
+   */
+
+  /**
+   * @template A, B
+   * @typedef {ClassOptions['returnRawResponse'] extends false ? A : B} IfNotRawResponse
+   */
+
+  /**
+   * @template A, B
+   * @typedef {ClassOptions['cache'] extends true ? A : B} IfCache
+   */
+
+  /**
+   * @template A, B
+   * @template {ScrapeMethodOptions} T
+   * @typedef {T['skipCache'] extends true ? A : B} IfSkipCache
+   */
+
+  /**
+   * @template {ScrapeMethodOptions} T
+   * @typedef {IfNotRawResponse<IfSkipCache<IfJSONContent<JSONData, HTMLData>, IfCache<LocalFile, Response>, T>, Response>} ScrapeResponse
+   */
+
+  /**
+   * @template {ScrapeMethodOptions} O
+   *
+   * @public
+   * @param {O} options
+   */
+  postFlight(options) {
+    /**
+     * @param {Response} response
+     * @returns {Promise<ScrapeResponse<O>>}
+     */
+    return async response => {
+      if (this.returnRawResponse === true) {
+        /**
+         * Behave as a normal fetch would
+         */
+
+        // prettier-ignore
+        return /** @type {ScrapeResponse<O>} */ (response)
       }
 
-      /**
-       * @public
-       */
-      this.cache = new LocalCache(baseURL, contentType, cacheOptions)
-    }
+      if (response.ok === false) {
+        /**
+         * NOTE: this is caught by Scrape's cacheFailedRequest method
+         */
 
-    /**
-     * @private
-     * @type {ScrapeHandleRequestFunction}
-     */
-    this.handleRequest = undefined
-
-    /**
-     * @private
-     * @type {ScrapeHandleResponseFunction}
-     */
-    this.handleResponse = undefined
-
-    /**
-     * @private
-     * @type {ScrapeHandleFailedRequestFunction}
-     */
-    this[handleFailedRequest] = undefined
-
-    /**
-     * @public
-     */
-    this.fetch = this.createFetch()
-
-    this.install()
-  }
-
-  /**
-   *
-   * PUBLIC GETTERS
-   *
-   */
-
-  /**
-   * @public
-   */
-  get throttleLimit() {
-    return this.throttleOptions.limit
-  }
-
-  /**
-   * @public
-   */
-  get throttleInterval() {
-    return this.throttleOptions.interval
-  }
-
-  /**
-   *
-   * PRIVATE GETTERS
-   *
-   */
-
-  /**
-   * @private
-   * @readonly
-   */
-  static get responseBodyTypes() {
-    return /** @type {const} */ ({ html: 'text', json: 'json' })
-  }
-
-  /**
-   *
-   * PUBLIC SETTERS
-   *
-   */
-
-  /**
-   * @public
-   * @param {number} limit
-   */
-  set throttleLimit(limit) {
-    this.throttleOptions = { ...this.throttleOptions, limit }
-    this.Fetch = this.createFetch()
-  }
-
-  /**
-   * @public
-   * @param {number} interval
-   */
-  set throttleInterval(interval) {
-    this.throttleOptions = { ...this.throttleOptions, interval }
-    this.Fetch = this.createFetch()
-  }
-
-  /**
-   *
-   * PRIVATE METHODS
-   *
-   */
-
-  /**
-   * @private
-   */
-  install() {
-    /**
-     * @param {string} href
-     */
-    this.preFlight = async href => {
-      if (this.handleRequest) {
-        const url = new URL(href)
-        const handledUrl = await this.handleRequest(url)
-        return handledUrl.toString()
+        throw new ScrapeError('postFlight', {
+          message: `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`,
+          status: response.status,
+        })
       }
-      return href
-    }
 
-    /**
-     * @param {boolean} skipCache
-     */
-    this.postFlight =
-      skipCache =>
-      /**
-       * @param {Response} response
-       */
-      async response => {
-        if (this.returnRawFetchResponse === false) {
-          if (response.ok === false) {
-            throw new Error(
-              `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`
-            )
-          }
-        }
+      let handledResponse = undefined
 
-        if (this.cache !== null && skipCache === false) {
-          const { url: href } = response
-          const data = await response.clone()[this.responseBodyType]()
-          await this.cache.set(href, data)
-        }
+      if (this.handlers.response) {
+        /**
+         * handledResponse is assigned the result of the end-user's
+         * handleResponse function. We assume this might be void (when
+         * the user only employs the handler to execute side-effects).
+         */
 
-        let handledResponse = response
+        handledResponse = await this.handlers.response(response.clone())
+      }
 
-        if (this.handleResponse) {
-          /**
-           * handledResponse is assigned either the result of the
-           * end-user's handleResponse function or else defaults to the
-           * response received from the origional fetch; this safe-guard is
-           * in place in case the end-user forgets to return the response
-           * at the end of their handler
-           */
-          handledResponse =
-            (await this.handleResponse(response)) ?? handledResponse
-        }
+      if (this.cache !== null && options.skipCache === false) {
+        /**
+         * @type {ScrapeHref}
+         */
+        let href = undefined
 
         /**
-         * handledResponse can be anything after calling handleResponse.
-         * If it's still an instance of Response, and the user hasn't
-         * specified that they want the raw Response returned, decode
-         * the response by body type.
+         * @type {ScrapeResponseData}
          */
-        if (
-          handledResponse instanceof Response &&
-          this.returnRawFetchResponse === false
-        ) {
-          handledResponse = await handledResponse[this.responseBodyType]()
+        let data = undefined
+
+        /**
+         * @type {LocalFile}
+         */
+        let file = undefined
+
+        /**
+         * If the response handler was run, and the user returned the
+         * original response from the handler, we parse the response
+         * body before saving to the local file-system. The handler
+         * could also have run and returned data directly, in which case
+         * the handled response *is* the data. If the handler wasn't
+         * run, we parse the data from the origional Response.
+         */
+        if (handledResponse) {
+          if (handledResponse instanceof Response) {
+            href = handledResponse.url
+            data = await response.clone()[this.responseBodyType]()
+          } else {
+            href = response.url
+            data = handledResponse
+          }
+        } else {
+          href = response.url
+          data = await response.clone()[this.responseBodyType]()
         }
 
-        return handledResponse
+        if (this.returnRawResponse === false) {
+          file = await this.cache.set(href, data)
+
+          // prettier-ignore
+          return /** @type {ScrapeResponse<O>} */ (file)
+        }
       }
+
+      if (
+        handledResponse === undefined ||
+        handledResponse instanceof Response
+      ) {
+        /**
+         * If the response handler wasn't run, or the user returned
+         * the original Response from the handler, we parse the
+         * response body before returning
+         */
+
+        return response[this.responseBodyType]()
+      }
+
+      /**
+       * Otherwise, return the result of the response handler
+       */
+
+      // prettier-ignore
+      return /** @type {ScrapeResponse<O>} */ (handledResponse || response)
+    }
   }
-
-  /**
-   * @private
-   */
-  createFetch() {
-    const throttle = pThrottle(this.throttleOptions)
-
-    /**
-     * @param {string} href
-     * @param {RequestInit} init
-     */
-    return (href, init) => throttle(() => fetch(href, init))()
-  }
-
-  /**
-   *
-   * PUBLIC METHODS
-   *
-   */
 
   /**
    * @public
-   * @param {AddHandlerParameters} handler
+   * @template {ScrapeHandlerType} Handler
+   * @param {Handler} type
+   * @param {Handler extends 'request' ? ScrapeRequestHandler : Handler extends 'response' ? ScrapeResponseHandler : ScrapeFailedRequestHandler} handler
    */
-  addIntercept({ request, response, failedRequest }) {
-    if (
-      request === undefined &&
-      response === undefined &&
-      failedRequest === undefined
-    ) {
-      throw new Error(
-        `Scrape error: one intercept argument of either 'request', 'response', or 'failedRequest' must be provided`
-      )
-    }
+  addHandler(type, handler) {
+    const types = keys(this.handlers)
 
-    if (request !== undefined) {
-      this.handleRequest = request
-    }
-
-    if (response !== undefined) {
-      this.handleResponse = response
-    }
-
-    if (failedRequest !== undefined) {
-      this[handleFailedRequest] = failedRequest
+    if (types.includes(type)) {
+      if (type === 'request') {
+        this.handlers.request = /** @type {ScrapeRequestHandler} */ (handler)
+      }
+      if (type === 'response') {
+        this.handlers.response = /** @type {ScrapeResponseHandler} */ (handler)
+      }
+      if (type === 'failedRequest') {
+        this.handlers.failedRequest =
+          /** @type {ScrapeFailedRequestHandler} */ (handler)
+      }
+    } else {
+      throw new ScrapeError('unsupported handler type', {
+        message: `handler must be one of either 'request', 'response', or 'failedRequest' (found: ${type})`,
+      })
     }
   }
 }

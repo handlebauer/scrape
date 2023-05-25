@@ -6,15 +6,16 @@
     "target": "esnext",
     "declaration": true,
     "emitDeclarationOnly": true,
-    "outDir": "types",
+    "outDir": "lib",
     "noEmit": false,
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "nodenext",
+    "noErrorTruncation": true
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
     "node_modules"
-  ],
+  ]
 }

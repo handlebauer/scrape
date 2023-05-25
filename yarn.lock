@@ -244,10 +244,26 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.40.0.tgz#3ba73359e11f5a7bd3e407f70b3528abfae69cec"
   integrity sha512-ElyB54bJIhXQYVKjDSvCkPO1iU1tSAeVQJbllWJq1XQSmmA4dgFk8CbiBGpiOPxleE48vDogxCtmMYku4HSVLA==
 
-"@hbauer/convenience-functions@^0.32.2":
-  version "0.32.2"
-  resolved "https://registry.yarnpkg.com/@hbauer/convenience-functions/-/convenience-functions-0.32.2.tgz#c4a422acd88c1f1655b72fc0fa68f7629b468603"
-  integrity sha512-k1ZhtVI9coeTveL2kmkuWVi+EJcjGlceNWAf6GgeRLb2281BB53JRO28/cQibSOYk9jAvChPa6YEqj3UaKkkcw==
+"@hbauer/convenience-functions@^0.33.1":
+  version "0.33.1"
+  resolved "https://registry.yarnpkg.com/@hbauer/convenience-functions/-/convenience-functions-0.33.1.tgz#14b393291b76f8b33efac21a5ea906a3f965878c"
+  integrity sha512-c1Pjiqz8oZgr8Yiu+sgyx2z7VZ9R6lOtwOLnLa3+b4p1wsprxrJNGm2N55uR+xCDTyGSn0cwjBJPK+bvlqRhgw==
+  dependencies:
+    remeda "^1.14.0"
+
+"@hbauer/convenience-functions@^0.34.1":
+  version "0.34.1"
+  resolved "https://registry.yarnpkg.com/@hbauer/convenience-functions/-/convenience-functions-0.34.1.tgz#6146e8c127128dfca9f48a896ba9f75e611e41aa"
+  integrity sha512-go9lTp9+7lmqByMD93PfKGWWJ6YLDLTAtUBkyVO87fegmP0G6/7rzcBFLl7/6wY7DQsW0D5cjYWVcjhj/xu3gw==
+  dependencies:
+    remeda "^1.14.0"
+
+"@hbauer/convenience-functions@^0.35.0":
+  version "0.35.0"
+  resolved "https://registry.yarnpkg.com/@hbauer/convenience-functions/-/convenience-functions-0.35.0.tgz#1d84fa56c6c0f21d75fdd58f4e05e732a1c69fae"
+  integrity sha512-/U0v+qVFhhDan/VDuAo/q5iJ7IMsOu8FDXWoEE9n038bHzUW50o2/WKnid77fu5dICMNEBRWceKc1SHtD+ORXw==
+  dependencies:
+    remeda "^1.14.0"
 
 "@hbauer/eslint-config@^1.7.3":
   version "1.7.3"
@@ -260,18 +276,30 @@
     eslint-import-resolver-alias "^1.1.2"
     eslint-plugin-import "^2.27.5"
 
+"@hbauer/local-cache@^0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@hbauer/local-cache/-/local-cache-0.1.5.tgz#caccd642f00c053b4827752488085ec83d961261"
+  integrity sha512-9u8Q9py+QBaVPJg9fBXAXMvxZBSVLy73yfdUNr2t42iNmgOpPOHF5uGe+n2Ais8/dKi2NC5mE+UsspopMzsEKw==
+  dependencies:
+    "@hbauer/convenience-functions" "^0.33.1"
+    "@hbauer/local-file" "^0.4.8"
+    immer "^10.0.2"
+    remeda "^1.14.0"
+    zod "^3.21.4"
+
+"@hbauer/local-file@^0.4.8":
+  version "0.4.8"
+  resolved "https://registry.yarnpkg.com/@hbauer/local-file/-/local-file-0.4.8.tgz#2f9a0a88510cd4aa5e64ffed3c9066729c21aaee"
+  integrity sha512-dtUkCjrLVC7FGdXB0mHVg5BvRu/yiSzgT4zNblWys2Y+kMBnQY7PzzRFAcb8iOJ9P4LocihfslQMW1vzUNyzoA==
+  dependencies:
+    "@hbauer/convenience-functions" "^0.34.1"
+    remeda "^1.14.0"
+    zod "^3.21.4"
+
 "@hbauer/prettier-config@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@hbauer/prettier-config/-/prettier-config-1.1.0.tgz#c9a2aff583e4d88a89ecf8587361e82f8c1e268d"
   integrity sha512-bGpnP9vdX6gXFhNm3QS9fYDfmFKGRWDsAkfbquMTsSCd0zpVbMw5gGxAXfRksB8WI4p7a3pYscLz8MHIUt0n6g==
-
-"@hbauer/time-since-file@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@hbauer/time-since-file/-/time-since-file-0.2.0.tgz#2c36225ada417a42c370a22f715d26737b77f8fd"
-  integrity sha512-J8JRmV/jWG9KNLImt/ih3NUW5iNyHbLtq9r3fyAhlAoYpKoy1Qf3HMPpZvToEWjevgNMcATAIADzOd+a/Fj+kg==
-  dependencies:
-    dayjs "^1.11.7"
-    remeda "^1.14.0"
 
 "@hbauer/timer@^0.2.0":
   version "0.2.0"
@@ -820,11 +848,6 @@ date-time@^3.1.0:
   integrity sha512-uqCUKXE5q1PNBXjPqvwhwJf9SwMoAHBgWJ6DcrnS5o+W2JOiIILl0JEdVD8SGujrNS02GGxgwAg2PN2zONgtjg==
   dependencies:
     time-zone "^1.0.0"
-
-dayjs@^1.11.7:
-  version "1.11.7"
-  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.7.tgz#4b296922642f70999544d1144a2c25730fce63e2"
-  integrity sha512-+Yw9U6YO5TQohxLcIkrXBeY73WP3ejHWVvx8XCk3gxvQDCTEmS48ZrSZCKciI7Bhl/uCMyxYtE9UqRILmFphkQ==
 
 debug@^3.2.7:
   version "3.2.7"
@@ -1469,6 +1492,11 @@ ignore@^5.2.0:
   version "5.2.4"
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.2.4.tgz#a291c0c6178ff1b960befe47fcdec301674a6324"
   integrity sha512-MAb38BcSbH0eHNBxn7ql2NH/kX33OkB3lZ1BNdh7ENeRChHTYsTvWrMubiIAMNS2llXEEgZ1MUOBtXChP3kaFQ==
+
+immer@^10.0.2:
+  version "10.0.2"
+  resolved "https://registry.yarnpkg.com/immer/-/immer-10.0.2.tgz#11636c5b77acf529e059582d76faf338beb56141"
+  integrity sha512-Rx3CqeqQ19sxUtYV9CU911Vhy8/721wRFnJv3REVGWUmoAcIwzifTsdmJte/MV+0/XpM35LZdQMBGkRIoLPwQA==
 
 import-fresh@^3.0.0, import-fresh@^3.2.1:
   version "3.3.0"
@@ -2686,3 +2714,8 @@ yocto-queue@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-1.0.0.tgz#7f816433fb2cbc511ec8bf7d263c3b58a1a3c251"
   integrity sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==
+
+zod@^3.21.4:
+  version "3.21.4"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.21.4.tgz#10882231d992519f0a10b5dd58a38c9dabbb64db"
+  integrity sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==

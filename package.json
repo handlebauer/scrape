@@ -3,15 +3,32 @@
   "version": "0.6.0",
   "type": "module",
   "exports": {
-    "import": "./lib/index.mjs",
-    "require": "./lib/index.cjs"
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.cjs"
+    },
+    "./utils.js": {
+      "types": "./lib/utils/index.d.ts",
+      "import": "./lib/utils/index.mjs",
+      "require": "./lib/utils/index.cjs"
+    },
+    "./parameters.js": {
+      "types": "./lib/parameters/index.d.ts",
+      "import": "./lib/parameters/index.mjs",
+      "require": "./lib/parameters/index.cjs"
+    },
+    "./errors.js": {
+      "types": "./lib/errors/index.d.ts",
+      "import": "./lib/errors/index.mjs",
+      "require": "./lib/errors/index.cjs"
+    }
   },
   "module": "./lib/index.mjs",
   "main": "./lib/index.cjs",
-  "types": "types/index.d.ts",
+  "types": "lib/index.d.ts",
   "files": [
-    "lib",
-    "types"
+    "lib"
   ],
   "author": "Donald Geddes",
   "licence": "MIT",
@@ -20,20 +37,23 @@
     "access": "public"
   },
   "ava": {
-    "timeout": "30s",
+    "timeout": "10s",
     "require": [
       "dotenv/config"
-    ]
+    ],
+    "concurrency": 1
   },
   "prettier": "@hbauer/prettier-config",
   "eslintConfig": {
     "extends": "@hbauer/eslint-config"
   },
   "scripts": {
-    "build": "shx rm -rf ./lib && rollup -c",
-    "types": "shx rm -rf ./types && tsc -p jsconfig.json",
-    "prepublishOnly": "npm run types && npm run build",
-    "test": "ava",
+    "build": "rollup -c",
+    "types": "tsc -p jsconfig.json",
+    "clean": "shx rm -rf ./lib",
+    "prepublishOnly": "npm run clean && npm run types && npm run build",
+    "test": "docker compose up -d && sleep 1 && ava && docker compose down",
+    "test:legacy": "docker-compose up -d && sleep 1 && ava && docker-compose down",
     "prepare": "husky install"
   },
   "devDependencies": {
@@ -50,11 +70,13 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@hbauer/convenience-functions": "^0.32.2",
-    "@hbauer/time-since-file": "^0.2.0",
+    "@hbauer/convenience-functions": "^0.35.0",
+    "@hbauer/local-cache": "^0.1.5",
+    "@hbauer/local-file": "^0.4.8",
     "@hbauer/timer": "^0.2.0",
     "p-retry": "^5.1.2",
     "p-throttle": "^5.1.0",
-    "remeda": "^1.14.0"
+    "remeda": "^1.14.0",
+    "zod": "^3.21.4"
   }
 }

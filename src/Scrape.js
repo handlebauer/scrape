@@ -1,90 +1,151 @@
+import { merge, omit } from 'remeda'
+import pThrottle from 'p-throttle'
+import { LocalHTTPCache } from '@hbauer/local-cache'
+import { LocalFile } from '@hbauer/local-file'
 import { ScrapeBase } from './ScrapeBase.js'
-
+import { ScrapeError } from './errors/ScrapeError.js'
 import { reconcileHref } from './utils/reconcile-href.js'
+import * as validate from './parameters/common.js'
 
 /**
- * @typedef {import('./Scrape.types.js').ScrapeOptions} ScrapeOptions
- * @typedef {import('./Scrape.types.js').ScrapeRetryOptions} ScrapeRetryOptions
- * @typedef {import('./Scrape.types.js').ScrapeRetryInfo} ScrapeRetryInfo
- * @typedef {import('./Scrape.types.js').ScrapeInFlightRequest} ScrapeInFlightRequest
- * @typedef {import('./Scrape.types.js').RequestInitScrapeMethodOptions} RequestInitScrapeMethodOptions
+ * @typedef {import('./Scrape.types.js').ScrapeClassOptions} ScrapeClassOptions
+ *
+ * @typedef {import('./Scrape.types.js').ScrapeURLBase} ScrapeURLBase
+ * @typedef {import('./Scrape.types.js').ScrapeContentType} ScrapeContentType
+ * @typedef {import('./Scrape.types.js').ScrapeInitOptions} ScrapeInitOptions
+ *
+ * @typedef {import('./common.types.js').ScrapeInFlightRequestRetry} ScrapeInFlightRequestRetry
+ *
+ * @typedef {import('./Scrape.types.js').PThrottleOptions} PThrottleOptions
+ * @typedef {import('./common.types.js').ScrapeHref} ScrapeHref
+ *
+ * @typedef {import('./common.types.js').ScrapeMethodOptions} ScrapeMethodOptions
+ *
+ * @typedef {import('./Scrape.types.js').ScrapeParentError} ScrapeParentError
+ *
+ * @typedef {import('./common.types.js').JSONData} JSONData
+ * @typedef {import('./common.types.js').HTMLData} HTMLData
  */
 
-import { handleFailedRequest } from './ScrapeBase.js'
-
+/**
+ * @template {ScrapeContentType} [ContentType='json']
+ * @template {ScrapeClassOptions} [ClassOptions={ cache: true, returnRawResponse: false }]
+ * @extends {ScrapeBase<ScrapeContentType, ClassOptions>}
+ */
 export class Scrape extends ScrapeBase {
   /**
-   * @param {string} baseURL
-   * @param {ScrapeOptions} options
+   * NOTE: Some of the corresponding types are below the function ⬇️
+   *
+   * @template {ScrapeInitOptions} InitOptions
+   *
+   * @overload
+   * @param {ScrapeURLBase} baseURL
+   * @returns {Promise<Scrape>}
+   *
+   * @overload
+   * @param {ScrapeURLBase} baseURL
+   * @param {InitOptions} options
+   * @returns {Promise<WithCache<InitOptions, CacheTypes<InitOptions>, NonCacheTypes<InitOptions>>>}
+   *
+   * @param {ScrapeURLBase} baseURL
+   * @param {ScrapeInitOptions} [options]
    */
-  static init(baseURL, options = {}) {
-    return new Scrape(baseURL, options)
+  static async init(baseURL, options) {
+    baseURL = validate.baseURL.parse(baseURL)
+    options = validate.options.parse(options)
+
+    if (options.cache.enabled === false) {
+      return new Scrape(baseURL, options)
+    }
+
+    // prettier-ignore
+    const cache = await LocalHTTPCache.create(baseURL, options.contentType, options.cache)
+
+    return new Scrape(baseURL, options, cache)
   }
 
   /**
-   * @param {string} baseURL
-   * @param {ScrapeOptions} [options]
+   * @param {ScrapeURLBase} baseURL
+   * @param {ScrapeInitOptions} options
+   * @param {LocalHTTPCache} [cache]
    */
-  constructor(baseURL, options) {
-    super(baseURL, options)
+  constructor(baseURL, options, cache) {
+    super(baseURL, options, cache)
 
     /**
      * @private
-     * @type {ScrapeRetryOptions}
      */
-    this.retryOptions = { attempts: options.retry?.attempts || 0 }
+    this.retry = options.retry
 
     /**
      * @private
-     * @type {Map<string, ScrapeInFlightRequest>}
+     */
+    this.throttle = options.throttle
+
+    /**
+     * @private
      */
     this.inFlightRequests = new Map()
-  }
 
-  /**
-   * PUBLIC GETTERS
-   */
+    /**
+     * @private
+     */
+    this.fetch = this.createFetch()
+  }
 
   /**
    * @public
+   * @param {number} number
    */
-  get retryAttempts() {
-    return this.retryOptions.attempts
+  set retryNumber(number) {
+    this.retry.number = validate.retryNumber.parse(number)
   }
-
-  /**
-   *
-   * PUBLIC SETTERS
-   *
-   */
 
   /**
    * @public
-   * @param {number} attempts
+   * @param {number} limit
    */
-  set retryAttempts(attempts) {
-    this.retryOptions = { ...this.retryOptions, attempts }
+  set throttleLimit(limit) {
+    this.throttle.limit = validate.throttleLimit.parse(limit)
   }
 
   /**
-   *
-   * PRIVATE METHODS
-   *
+   * @public
+   * @param {number} interval
    */
+  set throttleInterval(interval) {
+    this.throttle.interval = validate.throttleInterval.parse(interval)
+  }
 
   /**
    * @private
-   * @param {Parameters<Scrape['scrape']>} args
    */
-  handleFailedRequest(...args) {
-    const [href, options, retry] = args
+  createFetch() {
+    const throttle = pThrottle(/** @type {PThrottleOptions} */ (this.throttle))
 
     /**
-     * @param {Error} error
+     * @param {string} href
+     * @param {RequestInit} init
      */
-    return error => {
-      if (this[handleFailedRequest] !== undefined) {
-        this[handleFailedRequest](error, retry)
+    return (href, init) => throttle(() => fetch(href, init))()
+  }
+
+  /**
+   * @param {ScrapeHref} href
+   * @param {ScrapeMethodOptions} options
+   * @param {ScrapeInFlightRequestRetry} retry
+   */
+  catchFailedRequest(href, options, retry) {
+    /**
+     * @param {ScrapeParentError} parent
+     */
+    return parent => {
+      const error = new ScrapeError('catchFailedRequest', { parent })
+
+      const handleFailedRequest = this.handlers.failedRequest
+
+      if (handleFailedRequest !== null) {
+        handleFailedRequest(error, retry)
       }
 
       return this.scrape(href, options, { attempts: retry.attempts + 1, error })
@@ -92,121 +153,115 @@ export class Scrape extends ScrapeBase {
   }
 
   /**
+   * @template A, B
+   * @typedef {ContentType extends 'json' ? A : B} IfJSONContent
+   */
+
+  /**
+   * @template A, B
+   * @typedef {ClassOptions['returnRawResponse'] extends false ? A : B} IfNotRawResponse
+   */
+
+  /**
+   * @template A, B
+   * @typedef {ClassOptions['cache'] extends true ? A : B} IfCache
+   */
+
+  /**
+   * @template A, B
+   * @template {ScrapeMethodOptions} T
+   * @typedef {T['skipCache'] extends true ? A : B} IfSkipCache
+   */
+
+  /**
+   * @template {ScrapeMethodOptions} T
+   * @typedef {IfNotRawResponse<IfSkipCache<IfJSONContent<JSONData, HTMLData>, IfCache<LocalFile, Response>, T>, Response>} ScrapeResponse
+   */
+
+  /**
+   * @template {ScrapeMethodOptions} O
    *
-   * PUBLIC METHODS
-   *
+   * @param {ScrapeHref} href
+   * @param {O} [options]
+   * @param {ScrapeInFlightRequestRetry} [retry]
+   * @returns {Promise<ScrapeResponse<O>>}
    */
+  async scrape(href, options, retry) {
+    href = validate.href.parse(href)
+    let init = omit(options, validate.scrapeOptionsKeys)
+    options = /** @type {O} */ (validate.scrapeOptions.parse(options))
+    retry = validate.scrapeRetry.parse(retry)
+    init = merge(init, options)
 
-  /**
-   * @public
-   * @param {string} href
-   */
-  getLocalPath(href) {
-    href = reconcileHref(this.baseURL, href)
+    const { invalidate, allowDistinctHref } = options
+    const { cache } = this
 
-    if (href === null) {
-      throw new Error(
-        `Scrape error: provided value for \`href\` (${href}) cannot be reconciled with the \`baseURL\` (${this.baseURL})`
-      )
+    if (retry.attempts > this.retry.number) {
+      throw retry.error
     }
 
-    return this.cache.resource.getPath(href)
-  }
-
-  /**
-   * @public
-   * @param {string} href
-   */
-  async getLocalFile(href) {
-    const data = await this.cache.get(href)
-
-    if (data === null) {
-      return null
-    }
-
-    const meta = await this.cache.resource.getMeta(href)
-
-    return { data, meta }
-  }
-
-  /**
-   * @public
-   * @param {string} href
-   * @param {any} data
-   */
-  addLocalFile(href, data) {
-    return this.cache.set(href, data)
-  }
-
-  /**
-   * @public
-   * @param {string} href
-   * @param {RequestInitScrapeMethodOptions} [options]
-   * @param {ScrapeRetryInfo} [retry]
-   * @returns {Promise<any>}
-   */
-  async scrape(href, options = {}, retry = { attempts: 0, error: null }) {
-    let { invalidate, skipCache, allowDistinctHref, ...init } = options
-
-    invalidate = {
-      force: invalidate?.force || false,
-      ago: invalidate?.ago || null,
-    }
-    skipCache = skipCache || false
-    allowDistinctHref = allowDistinctHref || false
-
-    /**
-     * Either an absolute href or else null
-     */
     let reconciledHref = reconcileHref(this.baseURL, href)
 
     if (reconciledHref === null) {
       if (allowDistinctHref === false) {
-        throw new Error(
-          `Scrape error: provided value for \`href\` (${href}) cannot be reconciled with the \`baseURL\` (${this.baseURL}) — if this is intentional, use the \`allowDistinctHref\` option`
-        )
-      }
-      /**
-       * allowDistinctHref is set to true, so use the original value of href
-       */
-      reconciledHref = href
-    }
-
-    /**
-     * The rest of the method uses href, re-assign
-     */
-    href = reconciledHref
-
-    /**
-     * If retry attempts have run out, return an error
-     */
-    if (retry.attempts > this.retryOptions.attempts) {
-      throw retry.error
-    }
-
-    href = await this.preFlight(href)
-
-    if (this.cache !== null) {
-      if (invalidate.force === false) {
-        const data = await this.cache.get(href, invalidate.ago)
-        if (data) return data
+        throw new ScrapeError('reconcileHref inside scrape', {
+          message: `provided value for href (${href}) cannot be reconciled with the baseURL (${this.baseURL}) - if this is intentional, consider the allowDistinctHref option`,
+        })
       } else {
-        console.log(`Invalidated cache for ${href}`)
+        reconciledHref = href
+      }
+    }
+
+    href = await this.preFlight(reconciledHref)
+
+    if (cache !== null) {
+      if (invalidate.force === false) {
+        const file = await cache.get(href, { expiredAfter: invalidate.after })
+        if (file && file.isExpired == false) {
+          // prettier-ignore
+          return /** @type {ScrapeResponse<O>} */ (file)
+        }
+      } else {
+        console.log(`Invalidated cache [${href}]`)
       }
     }
 
     if (this.inFlightRequests.has(href) && retry.error === null) {
-      return this.inFlightRequests.get(href).request
+      return this.inFlightRequests.get(href).response
     }
 
-    const request = this.fetch(href, init)
-      .then(this.postFlight(skipCache))
-      .catch(this.handleFailedRequest(href, options, retry))
+    const promise = this.fetch(href, init)
+      .then(this.postFlight(options))
+      .catch(this.catchFailedRequest(href, options, retry))
 
-    this.inFlightRequests.set(href, { request, retry })
-    const response = await request
+    this.inFlightRequests.set(href, { response: promise, retry })
+    const response = await promise
     this.inFlightRequests.delete(href)
 
-    return response
+    return /** @type {ScrapeResponse<O>} */ (response)
   }
 }
+
+/**
+ * @template {ScrapeInitOptions} T
+ * @template X, Y
+ * @typedef {true extends T['cache']['enabled'] ? X : Y} WithCache
+ */
+/**
+ * @template {ScrapeInitOptions} T
+ * @template X, Y
+ * @typedef {'json' extends T['contentType'] ? X : Y} AsJSON
+ */
+/**
+ * @template {ScrapeInitOptions} T
+ * @template X, Y
+ * @typedef {false extends T['returnRawResponse'] ? X : Y} NotRawResponse
+ */
+/**
+ * @template T
+ * @typedef {AsJSON<T, NotRawResponse<T, Scrape<'json', {cache: true, returnRawResponse: false}>, Scrape<'json', {cache: true, returnRawResponse: true}>>, NotRawResponse<T, Scrape<'html', {cache: true, returnRawResponse: false}>, Scrape<'html', {cache: true, returnRawResponse: true}>>>} CacheTypes
+ */
+/**
+ * @template T
+ * @typedef {AsJSON<T, NotRawResponse<T, Scrape<'json', {cache: false, returnRawResponse: false}>, Scrape<'json', {cache: false, returnRawResponse: true}>>, NotRawResponse<T, Scrape<'html', {cache: false, returnRawResponse: false}>, Scrape<'html', {cache: false, returnRawResponse: true}>>>} NonCacheTypes
+ */
