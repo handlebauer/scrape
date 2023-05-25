@@ -73,6 +73,7 @@ const httpbin = Scrape.init(baseURL, { contentType: 'html', cache: cacheOptions 
 
 const html = await httpbin.scrape('html') // alias for https://httpbin.org/html
 
-const path = httpbin.getLocalPath('html') // = '__cache/httpbin/html'
-const htmlFromFile = await readFile(path, 'utf8') // = '<!DOCTYPE html>...'
+const htmlFromFile = await readFile(html.path, 'utf8') // = '<!DOCTYPE html>...'
+
+assert.equal(html.data, htmlFromFile)
 ```
