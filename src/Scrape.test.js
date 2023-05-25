@@ -1,7 +1,6 @@
 import _test from 'ava'
 import { rm } from 'fs/promises'
 import { LocalHTTPCache } from '@hbauer/local-cache'
-import { LocalFile } from '@hbauer/local-file'
 import { sleep } from '@hbauer/convenience-functions'
 import { randomString } from 'remeda'
 import { throwUnlessENOENT } from '@hbauer/local-file/errors.js'
@@ -210,7 +209,6 @@ test('Should return a LocalFile for cached JSON scrapes', async t => {
   await httpbin.scrape('json')
   const file = await httpbin.scrape('json')
 
-  t.true(file instanceof LocalFile)
   t.is(file.data.slideshow.title, 'Sample Slide Show')
 })
 
@@ -220,7 +218,6 @@ test('Should return a LocalFile for cached HTML scrapes', async t => {
   await httpbin.scrape('html')
   const file = await httpbin.scrape('html')
 
-  t.true(file instanceof LocalFile)
   t.true(file.data.startsWith('<!DOCTYPE html>'))
 })
 

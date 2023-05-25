@@ -188,6 +188,7 @@ export class Scrape extends ScrapeBase {
    */
   async scrape(href, options, retry) {
     href = validate.href.parse(href)
+    options = /** @type {O} */ (options || {}) // TODO: do something better
     let init = omit(options, validate.scrapeOptionsKeys)
     options = /** @type {O} */ (validate.scrapeOptions.parse(options))
     retry = validate.scrapeRetry.parse(retry)
