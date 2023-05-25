@@ -1,5 +1,4 @@
 import { LocalHTTPCache } from '@hbauer/local-cache'
-import { keys } from 'remeda'
 import { LocalFile } from '@hbauer/local-file'
 import { ScrapeError } from './errors/ScrapeError.js'
 
@@ -240,23 +239,20 @@ export class ScrapeBase {
    * @param {Handler extends 'request' ? ScrapeRequestHandler : Handler extends 'response' ? ScrapeResponseHandler : ScrapeFailedRequestHandler} handler
    */
   addHandler(type, handler) {
-    const types = keys(this.handlers)
-
-    if (types.includes(type)) {
-      if (type === 'request') {
-        this.handlers.request = /** @type {ScrapeRequestHandler} */ (handler)
-      }
-      if (type === 'response') {
-        this.handlers.response = /** @type {ScrapeResponseHandler} */ (handler)
-      }
-      if (type === 'failedRequest') {
-        this.handlers.failedRequest =
-          /** @type {ScrapeFailedRequestHandler} */ (handler)
-      }
-    } else {
-      throw new ScrapeError('unsupported handler type', {
-        message: `handler must be one of either 'request', 'response', or 'failedRequest' (found: ${type})`,
-      })
+    if (type === 'request') {
+      this.handlers.request = /** @type {ScrapeRequestHandler} */ (handler)
     }
+    if (type === 'response') {
+      this.handlers.response = /** @type {ScrapeResponseHandler} */ (handler)
+    }
+    if (type === 'failedRequest') {
+      this.handlers.failedRequest = /** @type {ScrapeFailedRequestHandler} */ (
+        handler
+      )
+    }
+
+    throw new ScrapeError('unsupported handler type', {
+      message: `handler must be one of either 'request', 'response', or 'failedRequest' (found: ${type})`,
+    })
   }
 }

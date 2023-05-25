@@ -269,6 +269,15 @@ test('Should correctly throttle scraping given the configured throttle config', 
   t.true(after - before > (n - 1) * interval)
 })
 
+test('Should throw an error when attempting to add an unsupported handler', async t => {
+  const httpbin = await Scrape.init(baseURL)
+
+  // @ts-ignore
+  t.throws(() => httpbin.addHandler('noop', () => {}), {
+    instanceOf: ScrapeError,
+  })
+})
+
 test('Should reach the request handler if defined', async t => {
   const httpbin = await Scrape.init(baseURL)
 
