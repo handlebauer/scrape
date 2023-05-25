@@ -6,6 +6,7 @@ const parameters = './src/parameters/index.js'
 const errors = './src/errors/index.js'
 
 const external = [
+  '@hbauer/local-file',
   '@hbauer/local-file/parameters.js',
   ...Object.keys(pkg.dependencies),
 ]
