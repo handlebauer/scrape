@@ -4,6 +4,7 @@ import { LocalHTTPCache } from '@hbauer/local-cache'
 import { sleep } from '@hbauer/convenience-functions'
 import { randomString } from 'remeda'
 import { throwUnlessENOENT } from '@hbauer/local-file/errors.js'
+import { LocalFile } from '@hbauer/local-file'
 import { Scrape } from './Scrape.js'
 import { ScrapeError } from './errors/ScrapeError.js'
 
@@ -137,6 +138,23 @@ test('Should create a valid instance with partial options specified', async t =>
 
   // @ts-ignore
   t.is(httpbin.retry.number, 0)
+})
+
+test("Should return a Response object if `returnRawResponse` is specified and the file isn't cached", async t => {
+  const httpbin = await Scrape.init(baseURL, { returnRawResponse: true })
+
+  const response = await httpbin.scrape('json')
+
+  t.true(response instanceof Response)
+})
+
+test('Should return a LocalFile instance if `returnRawResponse` is specified and the file IS cached', async t => {
+  const httpbin = await Scrape.init(baseURL, { returnRawResponse: true })
+
+  await httpbin.scrape('json')
+  const file = await httpbin.scrape('json')
+
+  t.true(file instanceof LocalFile)
 })
 
 test('Should correctly assign retry config upon invooking setRetry', async t => {

@@ -134,20 +134,10 @@ export class ScrapeBase {
      * @returns {Promise<ScrapeResponse<O>>}
      */
     return async response => {
-      if (this.returnRawResponse === true) {
-        /**
-         * Behave as a normal fetch would
-         */
-
-        // prettier-ignore
-        return /** @type {ScrapeResponse<O>} */ (response)
-      }
-
       if (response.ok === false) {
         /**
          * NOTE: this is caught by Scrape's cacheFailedRequest method
          */
-
         throw new ScrapeError('postFlight', {
           message: `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`,
           status: response.status,
@@ -162,7 +152,6 @@ export class ScrapeBase {
          * handleResponse function. We assume this might be void (when
          * the user only employs the handler to execute side-effects).
          */
-
         handledResponse = await this.handlers.response(response.clone())
       }
 
@@ -203,33 +192,35 @@ export class ScrapeBase {
           data = await response.clone()[this.responseBodyType]()
         }
 
-        if (this.returnRawResponse === false) {
-          file = await this.cache.set(href, data)
+        file = await this.cache.set(href, data)
 
-          // prettier-ignore
+        if (this.returnRawResponse === false) {
           return /** @type {ScrapeResponse<O>} */ (file)
         }
       }
 
-      if (
-        handledResponse === undefined ||
-        handledResponse instanceof Response
-      ) {
+      if (this.returnRawResponse === false) {
+        if (
+          handledResponse === undefined ||
+          handledResponse instanceof Response
+        ) {
+          /**
+           * If the response handler wasn't run, or the user returned
+           * the original Response from the handler, we parse the
+           * response body before returning
+           */
+          return response[this.responseBodyType]()
+        }
         /**
-         * If the response handler wasn't run, or the user returned
-         * the original Response from the handler, we parse the
-         * response body before returning
+         * Otherwise, return the result of the response handler
          */
-
-        return response[this.responseBodyType]()
+        return /** @type {ScrapeResponse<O>} */ (handledResponse || response)
       }
 
       /**
-       * Otherwise, return the result of the response handler
+       * returnRawResponse === true
        */
-
-      // prettier-ignore
-      return /** @type {ScrapeResponse<O>} */ (handledResponse || response)
+      return /** @type {ScrapeResponse<O>} */ (response)
     }
   }
 

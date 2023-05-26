@@ -175,7 +175,7 @@ export class Scrape extends ScrapeBase {
 
   /**
    * @template {ScrapeMethodOptions} T
-   * @typedef {IfNotRawResponse<IfSkipCache<IfJSONContent<JSONData, HTMLData>, IfCache<LocalFile<any>, Response>, T>, Response>} ScrapeResponse
+   * @typedef {IfNotRawResponse<IfSkipCache<IfJSONContent<JSONData, HTMLData>, IfCache<LocalFile<any>, Response>, T>, LocalFile<any> | Response>} ScrapeResponse
    */
 
   /**

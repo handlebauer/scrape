@@ -52,7 +52,7 @@
     "types": "tsc -p jsconfig.json",
     "clean": "shx rm -rf ./lib",
     "prepublishOnly": "npm run clean && npm run types && npm run build",
-    "test": "docker compose up -d && sleep 1 && ava && docker compose down",
+    "test": "(docker compose up -d > /dev/null) && sleep 1; ava; docker compose down",
     "test:legacy": "docker-compose up -d && sleep 1 && ava && docker-compose down",
     "prepare": "husky install"
   },
