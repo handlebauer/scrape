@@ -267,6 +267,27 @@ test("Should skip the cache (i.e. don't write to the cache) if skipCache is true
   t.is(file, null)
 })
 
+test('Should invariably invalidate the href if invalidate.force is true', async t => {
+  const httpbin = await Scrape.init(baseURL)
+
+  await httpbin.scrape('json') // 'json' => cached
+
+  let file = await httpbin.scrape('json')
+  t.is(file.attributes.fromCache, true)
+
+  file = await httpbin.scrape('json', { invalidate: { force: true } }) // 'json' refetched
+  t.is(file.attributes.fromCache, false)
+})
+
+test('Should always return a Response if both invalidate.force and returnRawResponse are true', async t => {
+  const httpbin = await Scrape.init(baseURL, { returnRawResponse: true })
+
+  await httpbin.scrape('json')
+  const file = await httpbin.scrape('json', { invalidate: { force: true } }) // 'json' => cached
+
+  t.true(file instanceof Response)
+})
+
 test('Should correctly throttle scraping given the configured throttle config', async t => {
   const n = 3
   const interval = 1000

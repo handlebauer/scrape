@@ -170,12 +170,18 @@ export class Scrape extends ScrapeBase {
   /**
    * @template A, B
    * @template {ScrapeMethodOptions} T
+   * @typedef {T['invalidate']['force'] extends true ? A : B} IfInvalidateForce
+   */
+
+  /**
+   * @template A, B
+   * @template {ScrapeMethodOptions} T
    * @typedef {T['skipCache'] extends true ? A : B} IfSkipCache
    */
 
   /**
    * @template {ScrapeMethodOptions} T
-   * @typedef {IfNotRawResponse<IfSkipCache<IfJSONContent<JSONData, HTMLData>, IfCache<LocalFile<any>, Response>, T>, LocalFile<any> | Response>} ScrapeResponse
+   * @typedef {IfNotRawResponse<IfSkipCache<IfJSONContent<JSONData, HTMLData>, IfCache<LocalFile<any>, Response>, T>, IfInvalidateForce<Response, LocalFile<any> | Response, T>>} ScrapeResponse
    */
 
   /**

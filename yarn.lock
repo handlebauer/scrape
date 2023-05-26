@@ -276,10 +276,10 @@
     eslint-import-resolver-alias "^1.1.2"
     eslint-plugin-import "^2.27.5"
 
-"@hbauer/local-cache@^0.1.11":
-  version "0.1.11"
-  resolved "https://registry.yarnpkg.com/@hbauer/local-cache/-/local-cache-0.1.11.tgz#3c5013241c39f07d4d4155b84b88b2446bc4f5d1"
-  integrity sha512-dF5NJR57xgbGJ5bUVDI3COcqN2bYvflU5lqPfqC8ati8BPWL6kHhFYRUekKNjzwlGCucUtZZC8iguj9bi19ySw==
+"@hbauer/local-cache@^0.1.12":
+  version "0.1.12"
+  resolved "https://registry.yarnpkg.com/@hbauer/local-cache/-/local-cache-0.1.12.tgz#8b54c5109fa627897bfa127c965b890386a525a3"
+  integrity sha512-qw5VpWBjAwH5mfjIRARNxkb5Xzib6MWBf3e67c6wZPoEN8JS+Beu8JXOdTBZglrlmrP5o9rnlyOOtBCmS6j2Ug==
   dependencies:
     "@hbauer/convenience-functions" "^0.33.1"
     "@hbauer/local-file" "^0.4.12"
