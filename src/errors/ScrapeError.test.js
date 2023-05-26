@@ -44,8 +44,6 @@ test('Should automatically format ZodErrors', t => {
       parent: zodError,
     })
 
-    console.log(error)
-
     t.is(error.message, 'title: message' + formatZodError(zodError))
   } else {
     t.fail('validation.success should be false but it was not')
