@@ -218,8 +218,7 @@ export class Scrape extends ScrapeBase {
     if (cache !== null) {
       if (invalidate.force === false) {
         const file = await cache.get(href, { expiredAfter: invalidate.after })
-        if (file && file.isExpired == false) {
-          // prettier-ignore
+        if (file && file.attributes.expired == false) {
           return /** @type {ScrapeResponse<O>} */ (file)
         }
       } else {
