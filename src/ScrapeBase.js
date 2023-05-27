@@ -134,14 +134,16 @@ export class ScrapeBase {
      * @returns {Promise<ScrapeResponse<O>>}
      */
     return async response => {
-      if (response.ok === false) {
-        /**
-         * NOTE: this is caught by Scrape's cacheFailedRequest method
-         */
-        throw new ScrapeError('postFlight', {
-          message: `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`,
-          status: response.status,
-        })
+      if (this.returnRawResponse === false) {
+        if (response.ok === false) {
+          /**
+           * NOTE: this is caught by Scrape's cacheFailedRequest method
+           */
+          throw new ScrapeError('postFlight', {
+            message: `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`,
+            status: response.status,
+          })
+        }
       }
 
       let handledResponse = undefined

@@ -1,10 +1,4 @@
-// eslint-disable-next-line no-unused-vars
-import { fileAgeDuration } from '@hbauer/local-file/parameters.js'
-// eslint-disable-next-line no-unused-vars
-import { z } from 'zod'
-
 import { Scrape } from './Scrape.js'
-import { ScrapeError } from './errors/ScrapeError.js'
 
 /**
  * EXTERNAL
