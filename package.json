@@ -40,8 +40,7 @@
     "timeout": "10s",
     "require": [
       "dotenv/config"
-    ],
-    "concurrency": 1
+    ]
   },
   "prettier": "@hbauer/prettier-config",
   "eslintConfig": {
@@ -74,7 +73,7 @@
   },
   "dependencies": {
     "@hbauer/convenience-functions": "^0.35.0",
-    "@hbauer/local-cache": "^0.1.12",
+    "@hbauer/local-cache": "^0.1.13",
     "@hbauer/timer": "^0.2.0",
     "p-retry": "^5.1.2",
     "p-throttle": "^5.1.0",

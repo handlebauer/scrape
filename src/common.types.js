@@ -6,10 +6,7 @@ import { fileAgeDuration } from '@hbauer/local-file/parameters.js'
 import { ScrapeError } from './errors/ScrapeError.js'
 
 /**
- * @typedef {string | number | boolean | JSONObject | JSONArray} JSONValue
- * @typedef {{ [key: string]: JSONValue}} JSONObject
- * @typedef {JSONObject[]} JSONArray
- * @typedef {JSONObject | JSONArray} JSONData
+ * @typedef {any} JSONData
  *
  * @typedef {string} HTMLData
  *

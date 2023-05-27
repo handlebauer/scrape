@@ -210,14 +210,17 @@ test('Should return raw data for non-cached scrapes', async t => {
   const httpbinHtml = await Scrape.init(baseURL, { contentType: 'html' })
 
   const json = await httpbinJson.scrape('json', {
-    skipCache: false,
+    skipCache: true,
   })
 
   const html = await httpbinHtml.scrape('html', {
     skipCache: true,
   })
 
-  t.is(json.data.slideshow.title, 'Sample Slide Show')
+  /**
+   * TODO: fix typing for JSONData (should be an intersection, not a union)
+   */
+  t.is(json.slideshow.title, 'Sample Slide Show')
   t.true(html.startsWith('<!DOCTYPE html>'))
 })
 
@@ -332,8 +335,9 @@ test('Should reach the response handler if defined', async t => {
 
   const href = 'json'
 
-  httpbin.addHandler('response', response => {
-    t.is(response.url, baseURL + '/' + href)
+  httpbin.addHandler('response', async response => {
+    const data = await response.json()
+    t.true(data.slideshow.author === 'Yours Truly')
     return response
   })
 

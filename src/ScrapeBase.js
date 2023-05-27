@@ -134,6 +134,11 @@ export class ScrapeBase {
      * @returns {Promise<ScrapeResponse<O>>}
      */
     return async response => {
+      /**
+       * @type {string}
+       */
+      let data = undefined
+
       if (this.returnRawResponse === false) {
         if (response.ok === false) {
           /**
@@ -144,57 +149,51 @@ export class ScrapeBase {
             status: response.status,
           })
         }
+
+        /**
+         * We parse the response body's data as soon as possible so as
+         * to avoid cloning the response, which demonstrably hangs the
+         * node process:
+         *
+         * - https://github.com/node-fetch/node-fetch/issues/1131
+         * - https://developer.mozilla.org/en-US/docs/Web/API/Response/clone
+         */
+        data = await response.text()
       }
 
       let handledResponse = undefined
 
       if (this.handlers.response) {
         /**
+         * Instead of .clone()ing the response, a new response is formed
+         * altogether before handing it off to the user.
+         *
          * handledResponse is assigned the result of the end-user's
-         * handleResponse function. We assume this might be void (when
-         * the user only employs the handler to execute side-effects).
+         * handleResponse function. To be safe, we assume this might be
+         * void (when the user employs the handler only to execute
+         * side-effects).
          */
-        handledResponse = await this.handlers.response(response.clone())
+
+        const options = {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+        }
+        const clone = new Response(data, options)
+
+        handledResponse = await this.handlers.response(clone)
       }
 
       if (this.cache !== null && options.skipCache === false) {
         /**
-         * @type {ScrapeHref}
+         * NOTE: this check is in place because the data will still need
+         * to be decoded if returnRawResponse === false
          */
-        let href = undefined
+        data = data || (await response.text())
 
-        /**
-         * @type {ScrapeResponseData}
-         */
-        let data = undefined
+        data = this.responseBodyType === 'json' ? JSON.parse(data) : data
 
-        /**
-         * @type {LocalFile<any>}
-         */
-        let file = undefined
-
-        /**
-         * If the response handler was run, and the user returned the
-         * original response from the handler, we parse the response
-         * body before saving to the local file-system. The handler
-         * could also have run and returned data directly, in which case
-         * the handled response *is* the data. If the handler wasn't
-         * run, we parse the data from the origional Response.
-         */
-        if (handledResponse) {
-          if (handledResponse instanceof Response) {
-            href = handledResponse.url
-            data = await response.clone()[this.responseBodyType]()
-          } else {
-            href = response.url
-            data = handledResponse
-          }
-        } else {
-          href = response.url
-          data = await response.clone()[this.responseBodyType]()
-        }
-
-        file = await this.cache.set(href, data)
+        const file = await this.cache.set(response.url, data)
 
         if (this.returnRawResponse === false) {
           return /** @type {ScrapeResponse<O>} */ (file)
@@ -211,8 +210,9 @@ export class ScrapeBase {
            * the original Response from the handler, we parse the
            * response body before returning
            */
-          return response[this.responseBodyType]()
+          return this.responseBodyType === 'json' ? JSON.parse(data) : data
         }
+
         /**
          * Otherwise, return the result of the response handler
          */
