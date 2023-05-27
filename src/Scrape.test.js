@@ -336,6 +336,7 @@ test('Should reach the response handler if defined', async t => {
   const href = 'json'
 
   httpbin.addHandler('response', async response => {
+    t.is(response.url, baseURL + '/' + 'json')
     const data = await response.json()
     t.true(data.slideshow.author === 'Yours Truly')
     return response

@@ -151,37 +151,28 @@ export class ScrapeBase {
         }
 
         /**
-         * We parse the response body's data as soon as possible so as
-         * to avoid cloning the response, which demonstrably hangs the
-         * node process:
+         * We clone the response and deocde the body as text. Using
+         * json() instead of text() is prone to hanging the node
+         * process, for reasons seemingly related to:
          *
          * - https://github.com/node-fetch/node-fetch/issues/1131
          * - https://developer.mozilla.org/en-US/docs/Web/API/Response/clone
+         *
+         * The decoded body is later parsed into JSON if necessary.
          */
-        data = await response.text()
+        data = await response.clone().text()
       }
 
       let handledResponse = undefined
 
       if (this.handlers.response) {
         /**
-         * Instead of .clone()ing the response, a new response is formed
-         * altogether before handing it off to the user.
-         *
          * handledResponse is assigned the result of the end-user's
          * handleResponse function. To be safe, we assume this might be
          * void (when the user employs the handler only to execute
          * side-effects).
          */
-
-        const options = {
-          status: response.status,
-          statusText: response.statusText,
-          headers: response.headers,
-        }
-        const clone = new Response(data, options)
-
-        handledResponse = await this.handlers.response(clone)
+        handledResponse = await this.handlers.response(response)
       }
 
       if (this.cache !== null && options.skipCache === false) {
