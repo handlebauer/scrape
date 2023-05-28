@@ -73,7 +73,7 @@
   },
   "dependencies": {
     "@hbauer/convenience-functions": "^0.35.0",
-    "@hbauer/local-cache": "^0.1.13",
+    "@hbauer/local-cache": "^0.1.14",
     "@hbauer/timer": "^0.2.0",
     "p-retry": "^5.1.2",
     "p-throttle": "^5.1.0",
