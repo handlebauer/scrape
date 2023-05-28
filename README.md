@@ -66,10 +66,10 @@ const baseURL = 'https://httpbin.org'
 /**
  * Cache Options
  *
- * disable - the cache can be disabled (enabled by default)
- * rootDirectory - PROJECT_ROOT/${rootDirectory} (PROJECT_ROOT/__cache by default)
- * name - alternatively, PROJECT_ROOT/${rootDirectory}/${name} (no name by default)
- * fileExtension - PROJECT_ROOT/${rootDirectory}/${name}/path/file.json (no ext by default)
+ * enabled - the cache can be enabled or disabled (enabled by default)
+ * rootDirectory - PROJECT_ROOT/${rootDirectory}
+ * name - alternatively, PROJECT_ROOT/${rootDirectory}/${name}
+ * fileExtension - PROJECT_ROOT/${rootDirectory}/${name}/path/file.${fileExtension}
  */
 const httpbin = Scrape.init(baseURL, { contentType: 'html' })
 
