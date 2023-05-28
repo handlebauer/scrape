@@ -50,6 +50,7 @@ const forceInvalidated = await httpbin.scrape('uuid', { invalidate: { force: tru
 
 assert.equal(cachedFile.attributes.fromCache, false)
 
+// Or invalidate based on how old the file is
 const expired = await httpbin.scrape('uuid', { invalidate: { expiredAfter: [1, 'week'] } })
 
 assert.equal(cachedFile.attributes.expired, true)
