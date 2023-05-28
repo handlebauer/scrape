@@ -296,10 +296,10 @@
     remeda "^1.14.0"
     zod "^3.21.4"
 
-"@hbauer/prettier-config@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@hbauer/prettier-config/-/prettier-config-1.1.0.tgz#c9a2aff583e4d88a89ecf8587361e82f8c1e268d"
-  integrity sha512-bGpnP9vdX6gXFhNm3QS9fYDfmFKGRWDsAkfbquMTsSCd0zpVbMw5gGxAXfRksB8WI4p7a3pYscLz8MHIUt0n6g==
+"@hbauer/prettier-config@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@hbauer/prettier-config/-/prettier-config-1.1.1.tgz#8f1f66c640ab53ab1e9ffa045914e0115ac100d8"
+  integrity sha512-jqIkmrnov/M72ZoTxOzPmB9r6jTQTmyn+FQt+NxA6eP3nLi1heTKorxi5GBSvm9/S50q14tQesQMM573/du4ag==
 
 "@hbauer/timer@^0.2.0":
   version "0.2.0"
