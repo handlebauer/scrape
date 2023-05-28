@@ -2,6 +2,7 @@ import { keys } from 'remeda'
 import { LocalHTTPCache } from '@hbauer/local-cache'
 import { LocalFile } from '@hbauer/local-file'
 import { ScrapeError } from './errors/ScrapeError.js'
+import { cloneResponse } from './utils/clone-response.js'
 
 /**
  * @typedef {import('./Scrape.types.js').ScrapeClassOptions} ScrapeClassOptions
@@ -135,32 +136,26 @@ export class ScrapeBase {
      */
     return async response => {
       /**
-       * @type {string}
+       * cloneResponse returns a proxied Response object which allows
+       * the response body to be consumed an arbitrary number of times.
+       *
+       * This was implemented after encountering unpredictable behaviour
+       * pertinent to response.clone() when used in tandem with
+       * response.json(), which, depending on the context, would hang
+       * the node process.
        */
-      let data = undefined
+      response = cloneResponse(response)
 
       if (this.returnRawResponse === false) {
         if (response.ok === false) {
           /**
-           * NOTE: this is caught by Scrape's cacheFailedRequest method
+           * NOTE: this is caught by Scrape.js's cacheFailedRequest method
            */
           throw new ScrapeError('postFlight', {
             message: `Fetch to ${response.url} failed: ${response.status} (${response.statusText})`,
             status: response.status,
           })
         }
-
-        /**
-         * We clone the response and deocde the body as text. Using
-         * json() instead of text() is prone to hanging the node
-         * process, for reasons seemingly related to:
-         *
-         * - https://github.com/node-fetch/node-fetch/issues/1131
-         * - https://developer.mozilla.org/en-US/docs/Web/API/Response/clone
-         *
-         * The decoded body is later parsed into JSON if necessary.
-         */
-        data = await response.clone().text()
       }
 
       let handledResponse = undefined
@@ -175,14 +170,14 @@ export class ScrapeBase {
         handledResponse = await this.handlers.response(response)
       }
 
-      if (this.cache !== null && options.skipCache === false) {
-        /**
-         * NOTE: this check is in place because the data will still need
-         * to be decoded if returnRawResponse === false
-         */
-        data = data || (await response.text())
+      let data = undefined
 
-        data = this.responseBodyType === 'json' ? JSON.parse(data) : data
+      if (this.cache !== null && options.skipCache === false) {
+        if (handledResponse instanceof Response) {
+          data = await handledResponse[this.responseBodyType]()
+        } else {
+          data = await response[this.responseBodyType]()
+        }
 
         const file = await this.cache.set(response.url, data)
 
@@ -191,29 +186,17 @@ export class ScrapeBase {
         }
       }
 
-      if (this.returnRawResponse === false) {
-        if (
-          handledResponse === undefined ||
-          handledResponse instanceof Response
-        ) {
-          /**
-           * If the response handler wasn't run, or the user returned
-           * the original Response from the handler, we parse the
-           * response body before returning
-           */
-          return this.responseBodyType === 'json' ? JSON.parse(data) : data
-        }
-
-        /**
-         * Otherwise, return the result of the response handler
-         */
-        return /** @type {ScrapeResponse<O>} */ (handledResponse || response)
+      if (this.returnRawResponse === true) {
+        return /** @type {ScrapeResponse<O>} */ (response)
       }
 
-      /**
-       * returnRawResponse === true
-       */
-      return /** @type {ScrapeResponse<O>} */ (response)
+      if (handledResponse instanceof Response) {
+        data = data || (await handledResponse[this.responseBodyType]())
+      } else {
+        data = data || (await response[this.responseBodyType]())
+      }
+
+      return /** @type {ScrapeResponse<O>} */ (data)
     }
   }
 
