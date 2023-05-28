@@ -16,35 +16,43 @@ import { Scrape } from '@hbauer/scrape'
 
 const baseURL = 'https://httpbin.org' // trailing slash is OK
 
-const httpbin = Scrape.init(baseURL, {
+const httpbin = await Scrape.init(baseURL, {
   contentType, // 'json' | 'html' (defaults to 'json')
   returnRawFetchResponse, // boolean (defaults to false)
   cache: {
-    disable, // boolean (defaults to undefined — in other words, the cache is initialized by default)
+    enabled, // boolean (defaults to true)
     rootDirectory, // string (defaults to '__cache')
-    name, // can be anything, e.g. 'scraper-name' (defaults to undefined)
+    name, // can be anything, e.g. 'scraper-name' (defaults to the hostname of the baseURL)
     fileExtension, // can be anything, e.g. 'json' | 'html' (defaults to undefined)
   }
   retry: {
     attempts, // number (defaults to 0)
   }
   throttle: {
-    interval, // number (defaults to 1000)
+    interval, // number (in milliseconds; defaults to 1000)
     limit, // number (defaults to 1)
   }
 })
 
 // Scraping a resource is now as simple as:
-const resource = await httpbin.scrape('uuid') // = { "uuid": "6bb2..." }
+const file = await httpbin.scrape('uuid')
 
 // Using an absolute URL instead (this results in the the exact same behaviour):
 const absolute = await httpbin.scrape('https://httpbin.org/uuid')
 
-// Get the local path to a cached file:
-const path = httpbin.getLocalPath('uuid') // = '__cache/uuid'
+// Future calls to the same URL will return from the cache:
+const cachedFile = await httpbin.scrape('uuid')
 
-// Note: a file may or may not already exist at the returned path:
-await readFile(path, 'utf8') // = returns an error if the resource has not yet been scraped
+assert.equal(cachedFile.attributes.fromCache, true)
+
+// You can force invalidate a file:
+const forceInvalidated = await httpbin.scrape('uuid', { invalidate: { force: true } }) // always re-fetches
+
+assert.equal(cachedFile.attributes.fromCache, false)
+
+const expired = await httpbin.scrape('uuid', { invalidate: { expiredAfter: [1, 'week'] } })
+
+assert.equal(cachedFile.attributes.expired, true)
 ```
 
 ### Cache
@@ -62,18 +70,15 @@ const baseURL = 'https://httpbin.org'
  * name - alternatively, PROJECT_ROOT/${rootDirectory}/${name} (no name by default)
  * fileExtension - PROJECT_ROOT/${rootDirectory}/${name}/path/file.json (no ext by default)
  */
-const cacheOptions = {
-  disable: false,
-  rootDirectory: '__cache'
-  name: 'httpbin'
-  fileExtension: 'html'
-}
+const httpbin = Scrape.init(baseURL, { contentType: 'html' })
 
-const httpbin = Scrape.init(baseURL, { contentType: 'html', cache: cacheOptions })
+const file = await httpbin.scrape('html') // alias for https://httpbin.org/html
 
-const html = await httpbin.scrape('html') // alias for https://httpbin.org/html
+// Get the local path to a cached file:
+const { fullPath } = await httpbin.cache.getPaths('html') // = '__cache/httpbin.org/html'
 
-const htmlFromFile = await readFile(html.path, 'utf8') // = '<!DOCTYPE html>...'
+// Get the cached file
+const cachedFile = await httpbin.cache.get('html')
 
-assert.equal(html.data, htmlFromFile)
+assert.equal(file.data, cachedFile.data)
 ```
