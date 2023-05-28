@@ -227,8 +227,6 @@ export class Scrape extends ScrapeBase {
         if (file && file.attributes.expired == false) {
           return /** @type {ScrapeResponse<O>} */ (file)
         }
-      } else {
-        console.log(`Invalidated cache [${href}]`)
       }
     }
 
