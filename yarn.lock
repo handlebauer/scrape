@@ -276,13 +276,13 @@
     eslint-import-resolver-alias "^1.1.2"
     eslint-plugin-import "^2.27.5"
 
-"@hbauer/local-cache@^0.1.14":
-  version "0.1.14"
-  resolved "https://registry.yarnpkg.com/@hbauer/local-cache/-/local-cache-0.1.14.tgz#8e89b1f981e00854296e29ad3f6f96a00d954e09"
-  integrity sha512-PJ7iWSq+T7f4lu1IcGUyMZIRM4roSyy7grRT307vFEgR2hpCLgahwnLVoilS1NlMI41vE3DKBIIezLxmU9RjmA==
+"@hbauer/local-cache@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@hbauer/local-cache/-/local-cache-0.3.0.tgz#866f415cae22597233ef41d3de408a266eb05a6b"
+  integrity sha512-xmIeFz3KaBjdCjOF6r20JXi/dhQUtGMaSpyMEEubfQyyz8sInLBjHGkI29ePX2/q8Yl6t//j6ohu1WTP4I2pXg==
   dependencies:
     "@hbauer/convenience-functions" "^0.33.1"
-    "@hbauer/local-file" "^0.4.12"
+    "@hbauer/local-file" "^0.5.0"
     immer "^10.0.2"
     remeda "^1.14.0"
     zod "^3.21.4"
@@ -291,6 +291,15 @@
   version "0.4.12"
   resolved "https://registry.yarnpkg.com/@hbauer/local-file/-/local-file-0.4.12.tgz#7a872b31acc194fbab7ed658227deb58ff966127"
   integrity sha512-V3JFhd6MZa16DKrrgXM/QEfNY0nqAz+63YxYeIxXdovJjmDMw7Ld49/Iq4gdVTpBNN1ecPRXDVd6LoB1AiwS1g==
+  dependencies:
+    "@hbauer/convenience-functions" "^0.34.1"
+    remeda "^1.14.0"
+    zod "^3.21.4"
+
+"@hbauer/local-file@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@hbauer/local-file/-/local-file-0.5.0.tgz#6f26d111c18b197421f1957ec465d70df931a33f"
+  integrity sha512-t49qZ+CNS5Pb01DL2O2Sn7X2eJIoWKKGNDltvLn4GzNQ5lXAJoFarFNae4T7pIGefMfLsL9VBzI0+QyKtBQ1uQ==
   dependencies:
     "@hbauer/convenience-functions" "^0.34.1"
     remeda "^1.14.0"
